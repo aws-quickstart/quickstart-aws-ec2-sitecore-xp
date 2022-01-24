@@ -1,0 +1,867 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates a new VPC and RD GW host, and deploys Sitecore into the newly created VPC (qs-1qppe6855)
+Metadata:
+  QuickStartDocumentation:
+    EntrypointName: "Launch into a new VPC"
+    OptionalParameters:
+      - IntDNS
+      - ExternalCertificateARN
+      - ExternalCertFQDN
+      - ExternalR53ZoneID
+      - SOLRUrl
+      - LambdaZipsBucketName
+      - SQLAlwaysOn
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: VPC Network configuration
+        Parameters:
+          - VPCCIDR
+          - PrivateSubnet1ACIDR
+          - PrivateSubnet2ACIDR
+          - PublicSubnet1CIDR
+          - PublicSubnet2CIDR
+          - AvailabilityZones
+      - Label:
+          default: RDGW configuration
+        Parameters:
+          - AdminUser
+          - AdminPassword
+          - DomainDNSName
+          - NumberOfRDGWHosts
+          - RDGWInstanceType
+          - RDGWCIDR
+          - KeyPairName
+      - Label:
+          default: Sitecore networking configuration
+        Parameters:
+          - CDDNSName
+          - CMDNSName
+          - ISDNSName
+          - IntDNS
+          - ExternalCertificateARN
+          - ExternalCertFQDN
+          - ExternalR53ZoneID
+      - Label:
+          default: Sitecore configuration
+        Parameters:
+          - CDMinSize
+          - CDMaxSize
+          - CDDesiredCapacity
+          - CDInstanceType
+          - CDScalingMetric
+          - CDScalingMetricValue
+          - CMMinSize
+          - CMMaxSize
+          - CmIdRdInstanceType
+          - CMScalingMetric
+          - CMScalingMetricValue
+          - CollCSInstanceType
+          - MaCpPrcInstanceType
+          - MarCrRepInstanceType
+          - SitecoreKeyPair
+          - SitecorePrefix
+          - SitecoreS3Bucket
+          - SCResourcesPrefix
+          - SCLicensePrefix
+          - SOLRUrl
+          - SOLRCorePrefix
+          - EnvironmentType
+          - SCLogLevel
+          - EmailNotifications
+          - LambdaZipsBucketName
+      - Label:
+          default: SQL Server configuration
+        Parameters:
+          - DBInstanceClass
+          - DBAutoMinorVersionUpgrade
+          - SQLEngineEdition
+          - SQLEngineVersion
+          - SQLAlwaysOn
+          - VolumeSize
+          - VolumeType
+          - VolumeIops
+          - BackupRetentionPeriod
+      - Label:
+          default: ElastiCache Redis configuration
+        Parameters:
+         - CacheNodeType
+         - RedisPort
+      - Label:
+          default: AWS Quick Start configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3BucketRegion
+          - QSS3KeyPrefix
+    ParameterLabels:
+    # VPC
+      VPCCIDR:
+        default: VPC CIDR
+      PrivateSubnet1ACIDR:
+        default: Private subnet 1A CIDR
+      PrivateSubnet2ACIDR:
+        default: Private subnet 2A CIDR
+      PublicSubnet1CIDR:
+        default: Public subnet 1 CIDR
+      PublicSubnet2CIDR:
+        default: Public subnet 2 CIDR
+      AvailabilityZones:
+        default: Availability Zones
+    #RDGW
+      AdminUser:
+        default: RD Gateway Admin User Name
+      AdminPassword:
+        default: RD Gateway Admin Password
+      DomainDNSName:
+        default: RD Gateway Domain DNS Name
+      NumberOfRDGWHosts:
+        default: Number of RD Gateway hosts
+      RDGWInstanceType:
+        default: RD Gateway Instance Type
+      RDGWCIDR:
+        default: Allowed RD Gateway External Access CIDR
+      KeyPairName:
+        default: Key pair name for the RD Gateway
+    # Sitecore Network Configuration
+      CDDNSName:
+        default: Content delivery FQDN
+      CMDNSName:
+        default: Content management FQDN
+      ISDNSName:
+        default: Identity server FQDN
+      IntDNS:
+        default: Internal DNS suffix
+      ExternalCertificateARN:
+        default: External ACM ARN
+      ExternalCertFQDN:
+        default: External certificate domain name
+      ExternalR53ZoneID:
+        default: External Route 53 zone ID
+    # Sitecore Configuration
+      CDMinSize:
+        default: Minimum content delivery instances
+      CDMaxSize:
+        default: Maximum content delivery instances
+      CDDesiredCapacity:
+        default: Desired content delivery instances
+      CDInstanceType:
+        default: Content delivery
+      CDScalingMetric:
+        default: Content delivery scaling metric
+      CDScalingMetricValue:
+        default: Content delivery scaling metric value
+      CMMinSize:
+        default: Minimum content management instances
+      CMMaxSize:
+        default: Maximum content management instances
+      CmIdRdInstanceType:
+        default: Content management, identity, reference data
+      CMScalingMetric:
+        default: Content management scaling metric
+      CMScalingMetricValue:
+        default: Content management caling metric value
+      CollCSInstanceType:
+        default: Collection, collection search
+      MaCpPrcInstanceType:
+        default: Marketing automation, cortex processing, processing
+      MarCrRepInstanceType:
+        default: Marketing automation reporting, cortex reporting, reporting
+      SitecoreKeyPair:
+        default: EC2 Key Pair for Sitecore instances
+      SitecorePrefix:
+        default: Sitecore installation prefix
+      SitecoreS3Bucket:
+        default: Sitecore resources S3 Bucket
+      SCResourcesPrefix:
+        default: Sitecore installation files prefix
+      SCLicensePrefix:
+        default: Sitecore license file prefix
+      SOLRCorePrefix:
+        default: Solr cores prefix
+      SOLRUrl:
+        default: Solr server/cluster URL
+      EnvironmentType:
+        default: Sitecore environment type
+      SCLogLevel:
+        default: Sitecore log level
+      EmailNotifications:
+        default: Email notifications
+      LambdaZipsBucketName:
+        default: Lambda S3 bucket name
+    # SQL Configuration
+      DBInstanceClass:
+        default: Database instance class
+      DBAutoMinorVersionUpgrade:
+        default: Database auto minor version upgrade
+      SQLEngineEdition:
+        default: MSSQL database engine edition
+      SQLEngineVersion:
+        default: MSSQL database engine version
+      SQLAlwaysOn:
+        default: MSSQL always on
+      VolumeIops:
+        default: Data volume IOPS
+      VolumeSize:
+        default: Data volume size
+      VolumeType:
+        default: Data volume type
+      BackupRetentionPeriod:
+        default: Retention period
+    # Redis Configuration
+      CacheNodeType:
+        default: Redis cache node type
+      RedisPort:
+        default: Redis port
+    #Quick Start Configuration
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3BucketRegion:
+        default: Quick Start S3 bucket region
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
+      
+Parameters:
+#VPC
+  VPCCIDR:
+    Description: CIDR block for the VPC.
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/16
+    Type: String
+  PrivateSubnet1ACIDR:
+    Description: CIDR block for private subnet 1 located in Availability Zone 1.
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/19
+    Type: String
+  PrivateSubnet2ACIDR:
+    Description: CIDR block for private subnet 2 located in Availability Zone 2.
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.32.0/19
+    Type: String 
+  PublicSubnet1CIDR:
+    Description: CIDR block for the public (DMZ) subnet 1 located in Availability Zone 1.
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.128.0/20
+    Type: String
+  PublicSubnet2CIDR:
+    Description: CIDR block for the public (DMZ) subnet 2 located in Availability Zone 2.
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.144.0/20
+    Type: String
+  AvailabilityZones:
+    Description: "List of Availability Zones to use for the subnets in the VPC."
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+#RDGW
+  AdminUser:
+    Description: User name for the new local administrator account.
+    Type: String
+    Default: StackAdmin
+    MinLength: '5'
+    MaxLength: '25'
+    AllowedPattern: "[a-zA-Z0-9]*"
+  AdminPassword:
+    Description: Password for the administrative account. Must be at least 8 characters containing letters, numbers and symbols.
+    Type: String
+    MinLength: '8'
+    MaxLength: '32'
+    AllowedPattern: "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*"
+    NoEcho: true
+  DomainDNSName:
+    Description: Fully qualified domain name (FQDN) e.g. example.com.
+    Type: String
+    Default: example.com
+    MinLength: '2'
+    MaxLength: '255'
+    AllowedPattern: "[a-zA-Z0-9\\-]+\\..+"
+  NumberOfRDGWHosts:
+    AllowedValues: 
+      - '0'
+      - '1'
+      - '2'
+    Default: '1'
+    Description: Enter the number of Remote Desktop Gateway hosts to create.
+    Type: String
+  RDGWInstanceType:
+    Description: Amazon EC2 instance type for the first Remote Desktop Gateway instance.
+    Type: String
+    Default: t2.large
+    AllowedValues:
+      - t2.large
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+  RDGWCIDR:
+    AllowedPattern: "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$"
+    Description: Allowed CIDR Block for external access to the Remote Desktop Gateways.
+    Type: String
+  KeyPairName:
+    Description: Key pairs allow you to securely connect to your instance after it launches.
+    Type: AWS::EC2::KeyPair::KeyName
+# Sitecore Networking Configuration
+  CDDNSName:
+    Type: String
+    Description: 'Fully qualified domain name for the content delivery role (e.g., home.example.com).'
+  CMDNSName:
+    Type: String
+    Description: Fully qualified domain name for the content management role.
+  ISDNSName:
+    Type: String
+    Description: Fully qualified domain name for the identity server role.
+  IntDNS:
+    Type: String
+    Description: '[Optional] Internal DNS name. If left blank, one is generated for you.'
+  ExternalCertificateARN:
+    Type: String
+    Description: "[Optional] Provide the Amazon Resource Name (ARN) of the wildcard certificate created in Amazon Certificate Manager. If not provided, 
+      a wildcard certificate will be created for you. If you provide an ARN, you do not need to provide details 
+      for ExternalCertFQDN or ExternalRoute53ZoneID."
+  ExternalCertFQDN: 
+    Type: String
+    Description: "[Optional] External domain name for the Sitecore deployment (e.g., example.com). 
+      This is created in ACM as a wildcard certificate (e.g., *.example.com) if no value is provided for ExternalCertificateARN."
+  ExternalR53ZoneID: 
+    Type: String
+    Description: "[Optional] Provide the Route 53 Hosted Zone ID for ExternalCertFQDN if you require certificate 
+      validation to be done via DNS. If no Route 53 Hosted Zone ID is provided, validation is done via email."
+# Sitecore Configuration
+  CDMinSize:
+    Type: String
+    Default: '1'
+    Description: Minimum number of content delivery instances available.
+  CDMaxSize:
+    Type: String
+    Default: '3'
+    Description: Maximum number of content delivery instances available.
+  CDDesiredCapacity:
+    Type: String
+    Default: '2'
+    Description: Desired number of content delivery instances available.
+  CDInstanceType:
+    AllowedValues:
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.8xlarge
+    - m5a.large
+    - m5a.xlarge
+    - m5a.2xlarge
+    - m5a.4xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.8xlarge
+    - r5a.large
+    - r5a.xlarge
+    - r5a.2xlarge
+    - r5a.4xlarge
+    - r5a.8xlarge
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    ConstraintDescription: Choose an instance type. m3.medium or larger recommended.
+    Default: m5a.xlarge
+    Description: Content Delivery instance type.
+    Type: String
+  CDScalingMetric:
+    Description: Metric used to determine scaling of the content delivery role.
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization 
+      - ASGAverageNetworkIn 
+      - ALBRequestCountPerTarget 
+    Type: String
+  CDScalingMetricValue:
+    Description: Value required for the scaling metric (For ASGAverageNetworkIn this value is in bytes).
+    Default: 70
+    Type: Number
+  CMMinSize:
+    Type: String
+    Default: '1'
+    Description: Minimum number of content management instances available.
+  CMMaxSize:
+    Type: String
+    Default: '2'
+    Description: Maximum number of content management instances available.
+  CmIdRdInstanceType:
+    AllowedValues:
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.8xlarge
+    - m5a.large
+    - m5a.xlarge
+    - m5a.2xlarge
+    - m5a.4xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.8xlarge
+    - r5a.large
+    - r5a.xlarge
+    - r5a.2xlarge
+    - r5a.4xlarge
+    - r5a.8xlarge
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    ConstraintDescription: Choose an instance type. m5.xlarge or larger recommended.
+    Default: m5a.xlarge
+    Description: Instance type, applied to the roles of content management, identity, and reference data.
+    Type: String
+  CMScalingMetric:
+    Description: Metric used to determine scaling of the content management role.
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization 
+      - ASGAverageNetworkIn 
+      - ALBRequestCountPerTarget 
+    Type: String
+  CMScalingMetricValue:
+    Description: Value required for the scaling metric (For ASGAverageNetworkIn this value is in bytes).
+    Default: 70
+    Type: Number
+  CollCSInstanceType:
+    AllowedValues:
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.8xlarge
+    - m5a.large
+    - m5a.xlarge
+    - m5a.2xlarge
+    - m5a.4xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.8xlarge
+    - r5a.large
+    - r5a.xlarge
+    - r5a.2xlarge
+    - r5a.4xlarge
+    - r5a.8xlarge
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    ConstraintDescription: Choose an instance type. m5.xlarge or larger recommended.
+    Default: m5a.xlarge
+    Description: Instance type, applied to the roles of collection, collection search.
+    Type: String
+  MaCpPrcInstanceType:
+    AllowedValues:
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.8xlarge
+    - m5a.large
+    - m5a.xlarge
+    - m5a.2xlarge
+    - m5a.4xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.8xlarge
+    - r5a.large
+    - r5a.xlarge
+    - r5a.2xlarge
+    - r5a.4xlarge
+    - r5a.8xlarge
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    ConstraintDescription: Choose an instance type. m5.xlarge or larger recommended.
+    Default: m5a.xlarge
+    Description: Instance type, applied to the roles of marketing automation, cortex processing, and processing.
+    Type: String
+  MarCrRepInstanceType:
+    AllowedValues:
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.8xlarge
+    - m5a.large
+    - m5a.xlarge
+    - m5a.2xlarge
+    - m5a.4xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.8xlarge
+    - r5a.large
+    - r5a.xlarge
+    - r5a.2xlarge
+    - r5a.4xlarge
+    - r5a.8xlarge
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    ConstraintDescription: Choose an instance type. m5.xlarge or larger recommended.
+    Default: m5a.xlarge
+    Description: Instance type, applied to the roles of marketing automation reporting, cortex reporting, and reporting.
+    Type: String
+  SitecoreKeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: EC2 Key Pair to use for the Sitecore instances.
+  SitecorePrefix: 
+    Type: String
+    Description: Prefix to be used for the Sitecore installation. This is limited to 8 characters.
+    MinLength: 1
+    MaxLength: 8
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Sitecore prefix can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+  SitecoreS3Bucket:
+    Type: String
+    Description: S3 Bucket name where the Sitecore 9.3 resources are located (installation files, license file, etc.).
+      This deployment will put objects into this bucket.
+  SCResourcesPrefix:
+    Type: String
+    Description: "Prefix in the S3 Bucket for the Sitecore install files (eg: resources/)."
+    Default: resources/
+  SCLicensePrefix:
+    Type: String
+    Description: "Prefix in the S3 Bucket for the license.zip file (eg: license/)." 
+    Default: license/
+  SOLRUrl:
+    Description: "[Optional] URL of your Solr server/cluster. If no URL is provided a development Solr instance will be 
+      created for this Sitecore deployment. Note: This development Solr instance should not be used within a production environment."
+    Type: String 
+    Default: ''
+  SOLRCorePrefix: 
+    Type: String
+    Description: If you provided a Solr URL, this is the prefix of your pre-configured Solr cores. 
+      If no Solr URL provided, this is the prefix used for the Solr cores on the development Solr instance.
+  EnvironmentType: 
+    Description: Type of Sitecore deployment.
+    AllowedValues:
+      - Production
+      - Development
+    Default: Production
+    Type: String
+  SCLogLevel: 
+    Description: Sitecore deployment configured log level.
+    AllowedValues:
+      - Information
+      - Debug
+      - Error
+      - Warning
+      - None
+    Default: Information
+    Type: String
+  EmailNotifications:
+    Description: Email address for receiving Sitecore auto scaling notifications.
+    Type: String
+  LambdaZipsBucketName:
+    Description: '[Optional] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
+    Type: String
+    Default: ''
+# RDS MS SQL
+  DBAutoMinorVersionUpgrade: 
+    AllowedValues: 
+      - 'true'
+      - 'false'
+    Default: 'true'
+    Description: If set to true, minor engine upgrades are applied to the database instance. 
+      If set to false, minor engine upgrades are not applied to the database instance.
+    Type: String
+  DBInstanceClass:
+    AllowedValues:
+      - db.m5.large
+      - db.m5.xlarge
+      - db.m5.2xlarge
+      - db.m5.4xlarge
+      - db.m5.12xlarge
+      - db.m5.24xlarge
+      - db.m4.large
+      - db.m4.xlarge
+      - db.m4.2xlarge
+      - db.m4.4xlarge
+      - db.m4.10xlarge
+      - db.m4.16xlarge
+      - db.r4.large
+      - db.r4.xlarge
+      - db.r4.2xlarge
+      - db.r4.4xlarge
+      - db.r4.8xlarge
+      - db.r4.16xlarge
+    ConstraintDescription: 'Must select a valid database instance type.'
+    Default: db.r4.2xlarge
+    Description: Name of the compute and memory capacity class of the database instance.
+    Type: String
+  SQLEngineEdition:
+    AllowedValues:
+      - sqlserver-ee
+      - sqlserver-se
+      - sqlserver-ex
+      - sqlserver-web
+    ConstraintDescription: Must select a MSSQL database engine edition.
+    Default: sqlserver-se
+    Description: MSSQL database engine edition.
+    Type: String
+  SQLEngineVersion:
+    AllowedValues:
+      - 14.00.3381.3.v1
+      - 14.00.3223.3.v1
+      - 14.00.3192.2.v1
+      - 14.00.3049.1.v1
+      - 14.00.3035.2.v1
+      - 14.00.3015.40.v1
+      - 14.00.1000.169.v1
+    ConstraintDescription: Must select a MSSQL database engine version.
+    Default: 14.00.3381.3.v1
+    Description: MSSQL database engine version.
+    Type: String
+  SQLAlwaysOn:
+    Default: 'False'
+    AllowedValues:
+      - 'False'
+      - 'True'
+    Description: "[Optional] Set to true if you want SQL to be always on (high availability) for the deployment. 
+      Beware that this only applies when SQLEngineEdition is set to sqlserver-ee (Enterprise Edition) as the MSSQL database engine edition. 
+      If set to false, SQL will be deployed to one Availability Zone."
+    Type: String
+  BackupRetentionPeriod:
+    Default: 7
+    Description: Number of days automated backups are retained. Setting this parameter to a positive number enables backups. 
+      Setting this parameter to 0 disables automated backups. 
+    Type: Number
+  VolumeIops:
+    Default: '1000'
+    Description: Provisioned IOPS for the SQL Data, Logs and TempDb volumes. This
+      parameter is only applicable when VolumeType is set to "io1".
+    MaxValue: '20000'
+    MinValue: '100'
+    Type: Number
+  VolumeSize:
+    Default: '500'
+    Description: Volume size (GB) for the SQL data, logs, and TempDb volumes.
+    MaxValue: '16000'
+    MinValue: '100'
+    Type: Number
+  VolumeType:
+    AllowedValues:
+      - gp2
+      - io1
+    Default: gp2
+    Description: Volume type for the SQL Data, Logs and TempDb volumes.
+    Type: String
+# Redis Configuration
+  CacheNodeType:
+    Description: Instance type the nodes are launched under.
+    Type: String
+    Default: cache.m4.large
+    AllowedValues:
+      - cache.t2.micro
+      - cache.t2.small
+      - cache.t2.medium
+      - cache.m4.large
+      - cache.m4.xlarge
+      - cache.m4.xlarge
+      - cache.m4.4xlarge
+      - cache.r4.large
+      - cache.r4.xlarge
+      - cache.r4.2xlarge
+      - cache.r4.4xlarge
+      - cache.r4.8xlarge
+  RedisPort:
+    Description: Port number to be used for Redis ElastiCache.
+    Type: Number
+    Default: 6379
+# Quick Start configuration
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: aws-quickstart
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/).
+    Default: quickstart-sitecore-xp/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
+      forward slash (/).
+    Type: String
+Rules:
+  CDInstanceNumbers:
+    Assertions:
+      - AssertDescription: Maximum number of Content Delivery instances must be larger than the minimum number specified.
+        Assert: !Not [!Equals [!Ref CDMinSize, !Ref CDMaxSize]]
+  CMInstanceNumbers:
+    Assertions:
+      - AssertDescription: Maximum number of Content Management instances must be larger than the minimum number specified.
+        Assert: !Not [!Equals [!Ref CMMinSize, !Ref CMMaxSize]]
+
+Conditions:
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+  IncludeRDGW: !Not
+    - !Equals
+      - !Ref NumberOfRDGWHosts
+      - '0'
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        AvailabilityZones:
+          !Join
+          - ','
+          - !Ref AvailabilityZones
+        NumberOfAZs: '2'
+        PrivateSubnet1ACIDR: !Ref PrivateSubnet1ACIDR
+        PrivateSubnet2ACIDR: !Ref PrivateSubnet2ACIDR
+        PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
+        PublicSubnet2CIDR: !Ref PublicSubnet2CIDR
+        VPCCIDR: !Ref VPCCIDR
+  RDGWStack:
+    # DependsOn: VPCStack
+    Type: AWS::CloudFormation::Stack
+    Condition: IncludeRDGW
+    Properties: 
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-rdgateway/templates/rdgw-standalone.template'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        AdminPassword: !Ref AdminPassword
+        AdminUser: !Ref AdminUser
+        DomainDNSName: !Ref DomainDNSName
+        KeyPairName: !Ref KeyPairName
+        NumberOfRDGWHosts: !Ref NumberOfRDGWHosts
+        PublicSubnet1ID: !GetAtt VPCStack.Outputs.PublicSubnet1ID
+        PublicSubnet2ID: !GetAtt VPCStack.Outputs.PublicSubnet2ID
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketRegion: !Ref QSS3BucketRegion
+        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}submodules/quickstart-microsoft-rdgateway/
+        RDGWInstanceType: !Ref RDGWInstanceType
+        RDGWCIDR: !Ref RDGWCIDR
+        VPCID: !GetAtt VPCStack.Outputs.VPCID
+  SitecoreStack:
+    # DependsOn: RDGWStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-existing-vpc.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        VPCCIDR: !Ref VPCCIDR
+        VPCID: !GetAtt VPCStack.Outputs.VPCID
+        PrivateSubnet1A: !GetAtt VPCStack.Outputs.PrivateSubnet1AID 
+        PrivateSubnet2A: !GetAtt VPCStack.Outputs.PrivateSubnet2AID 
+        PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1ID 
+        PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2ID 
+        ExternalCertificateARN: !Ref ExternalCertificateARN
+        ExternalCertFQDN: !Ref ExternalCertFQDN
+        ExternalR53ZoneID: !Ref ExternalR53ZoneID
+        CDDNSName: !Ref CDDNSName
+        CMDNSName: !Ref CMDNSName
+        ISDNSName: !Ref ISDNSName
+        IntDNS: !Ref IntDNS
+        CDMinSize: !Ref CDMinSize
+        CDMaxSize: !Ref CDMaxSize
+        CDDesiredCapacity: !Ref CDDesiredCapacity
+        CDInstanceType: !Ref CDInstanceType
+        CDScalingMetric: !Ref CDScalingMetric
+        CDScalingMetricValue: !Ref CDScalingMetricValue
+        CMMinSize: !Ref CMMinSize
+        CMMaxSize: !Ref CMMaxSize
+        CmIdRdInstanceType: !Ref CmIdRdInstanceType
+        CMScalingMetric: !Ref CMScalingMetric
+        CMScalingMetricValue: !Ref CMScalingMetricValue
+        CollCSInstanceType: !Ref CollCSInstanceType
+        MaCpPrcInstanceType: !Ref MaCpPrcInstanceType
+        MarCrRepInstanceType: !Ref MarCrRepInstanceType
+        SitecoreKeyPair: !Ref SitecoreKeyPair
+        SitecorePrefix: !Ref SitecorePrefix
+        SitecoreS3Bucket: !Ref SitecoreS3Bucket
+        SCResourcesPrefix: !Ref SCResourcesPrefix
+        SCLicensePrefix: !Ref SCLicensePrefix
+        SOLRCorePrefix: !Ref SOLRCorePrefix
+        SOLRUrl: !Ref SOLRUrl
+        EnvironmentType: !Ref EnvironmentType
+        SCLogLevel: !Ref SCLogLevel
+        EmailNotifications: !Ref EmailNotifications
+        LambdaZipsBucketName: !Ref LambdaZipsBucketName
+        DBInstanceClass: !Ref DBInstanceClass
+        DBAutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
+        SQLEngineEdition: !Ref SQLEngineEdition
+        SQLEngineVersion: !Ref SQLEngineVersion
+        SQLAlwaysOn: !Ref SQLAlwaysOn
+        VolumeSize: !Ref VolumeSize
+        VolumeType: !Ref VolumeType
+        VolumeIops: !Ref VolumeIops
+        BackupRetentionPeriod: !Ref BackupRetentionPeriod
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketRegion: !Ref QSS3BucketRegion
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        CacheNodeType: !Ref CacheNodeType
+        RedisPort: !Ref RedisPort

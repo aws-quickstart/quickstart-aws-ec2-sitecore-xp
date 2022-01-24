@@ -1,0 +1,153 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'This template deploys an internal Route53 hosted zone used for the Sitecore roles (qs-1qppe686j)'
+Parameters:
+  InternalR53DNS:
+    Type: String
+    Description: 'Internal Route 53 DNS FQDN.'
+  VPCID:
+    Type: String
+    Description: 'The VPC ID.'
+  LoadBalancerInternalDNS:
+    Type: String
+    Description: 'Internal Application Load Balancer DNS name.'
+  XConnectNLBDNS:
+    Type: String
+    Description: 'Internal Network Load Balancer DNS name for the XConnect Role.'
+  CollectionNLBDNS:
+    Type: String
+    Description: 'Internal Network Load Balancer DNS name for the Collection Role.'
+  RefDataNLBDNS:
+    Type: String
+    Description: 'Internal Network Load Balancer DNS name for the Reference data Role.'
+  MarketAutoRepNLBDNS:
+    Type: String
+    Description: 'Internal Network Load Balancer DNS name for the Marketing Automation Reporting Role.'
+  MarketAutoNLBDNS:
+    Type: String
+    Description: 'Internal Network Load Balancer DNS name for the Marketing Automation Role.'
+  CortexRepNLBDNS:
+    Type: String
+    Description: 'Internal Network Load Balancer DNS name for the Cortex Reporting Role.'
+  CortexProcNLBDNS:
+    Type: String
+    Description: 'Internal Network Load Balancer DNS name for the Cortex Processing Role.'
+  IntVPCR53Zone:
+    Type: String
+    Description: 'Internal VPC Route 53 Zone ID.'
+  SOLRUrl:
+    Type: String
+    Description: 'Solr URL for the Sitecore deployment'
+
+Conditions:
+  CreateR53Zone: !Equals [!Ref 'IntVPCR53Zone', ''] # If No internal R53 zone is provided, this is true
+  CreateDevSolr: !Equals [!Ref 'SOLRUrl', '']
+
+Resources:
+  # Internal DNS Configuration
+  InternalR53:
+    Type: AWS::Route53::HostedZone
+    Condition: CreateR53Zone
+    Properties:
+      Name: !Ref InternalR53DNS
+      VPCs:
+        - VPCId: !Ref VPCID
+          VPCRegion: !Sub ${AWS::Region}
+  CollRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone] # If we need to create the R53-HZ use the Created HZ, else use the HZ provided.
+      Name: !Sub 'coll.${InternalR53DNS}'
+      Type: CNAME
+      TTL: 900
+      ResourceRecords:
+        - !Ref CollectionNLBDNS
+  CSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone]
+      Name: !Sub 'collsearch.${InternalR53DNS}'
+      Type: CNAME
+      TTL: 900
+      ResourceRecords:
+        - !Ref XConnectNLBDNS
+  RDRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone]
+      Name: !Sub 'refdata.${InternalR53DNS}'
+      Type: CNAME
+      TTL: 900
+      ResourceRecords:
+        - !Ref RefDataNLBDNS
+  MARecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone]
+      Name: !Sub 'mktauto.${InternalR53DNS}'
+      Type: CNAME
+      TTL: 900
+      ResourceRecords:
+        - !Ref MarketAutoNLBDNS
+  MARRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone]
+      Name: !Sub 'mktautorep.${InternalR53DNS}'
+      Type: CNAME
+      TTL: 900
+      ResourceRecords:
+        - !Ref MarketAutoRepNLBDNS
+  CPRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone]
+      Name: !Sub 'cortexproc.${InternalR53DNS}'
+      Type: CNAME
+      TTL: 900
+      ResourceRecords:
+        - !Ref CortexProcNLBDNS
+  CRRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone]
+      Name: !Sub 'cortexrep.${InternalR53DNS}'
+      Type: CNAME
+      TTL: 900
+      ResourceRecords:
+        - !Ref CortexRepNLBDNS
+  PRCRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone]
+      Name: !Sub 'proc.${InternalR53DNS}'
+      Type: CNAME
+      TTL: 900
+      ResourceRecords:
+        - !Ref LoadBalancerInternalDNS
+  RepRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone]
+      Name: !Sub 'rep.${InternalR53DNS}'
+      Type: CNAME
+      TTL: 900
+      ResourceRecords:
+        - !Ref LoadBalancerInternalDNS
+  SolrDevRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: CreateDevSolr # Only create record if no solr URL is provided
+    Properties:
+      HostedZoneId: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone]
+      Name: !Sub 'solrdev.${InternalR53DNS}'
+      Type: CNAME
+      TTL: 900
+      ResourceRecords:
+        - !Ref LoadBalancerInternalDNS
+
+Outputs:
+  R53IntHostedID:
+    Description: ID of the internal R53 Hosted Zone
+    Value: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone]
+  InternalDNSFQDN:
+    Description: The internal VPC FQDN for the Sitecore deployment 
+    Value: !Ref InternalR53DNS
