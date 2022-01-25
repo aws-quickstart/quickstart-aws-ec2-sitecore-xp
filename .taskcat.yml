@@ -1,0 +1,71 @@
+project:
+  name: quickstart-aws-sitecore-xp
+  regions:
+    - ap-northeast-1
+    - ap-northeast-2
+    - ap-south-1
+    - ap-southeast-1
+    - ap-southeast-2
+    - eu-central-1
+    - eu-north-1
+    - eu-west-1
+    - eu-west-2
+    - eu-west-3
+    - sa-east-1
+    - us-east-1
+    - us-west-1
+    - us-east-2
+    - us-west-2
+    - ca-central-1
+  parameters:
+    VPCCIDR: 10.0.0.0/16
+    PrivateSubnet1ACIDR: 10.0.0.0/19
+    PrivateSubnet2ACIDR: 10.0.32.0/19
+    PublicSubnet1CIDR: 10.0.128.0/20
+    PublicSubnet2CIDR: 10.0.144.0/20
+    AvailabilityZones: "$[taskcat_getaz_2]"
+    AdminUser: StackAdmin
+    AdminPassword: "$[taskcat_genpass_16]"
+    DomainDNSName: example.com
+    NumberOfRDGWHosts: 1
+    RDGWInstanceType: "t2.large"
+    RDGWCIDR: 10.0.0.0/0
+    CDMinSize: 1
+    CDMaxSize: 3
+    CDDesiredCapacity: 2
+    SitecoreInstanceType: m4.large
+    SitecorePrefix: sc
+    SitecoreS3Bucket: override
+    SCResourcesPrefix: override # resources/
+    SCLicensePrefix: override # license/
+    IntDNS: ''
+    SOLRCorePrefix: scsolr
+    SOLRUrl: ''
+    EnvironmentType: Production
+    SCLogLevel: Information
+    CorsOrigins: '*'
+    DBInstanceClass: db.m5.xlarge
+    DBAutoMinorVersionUpgrade: "false"
+    SQLEngineEdition: sqlserver-se
+    SQLEngineVersion: 14.00.3381.3.v1
+    VolumeSize: "500"
+    VolumeType: gp2
+    BackupRetentionPeriod: 1
+    QSS3BucketName: "$[taskcat_autobucket]"
+    QSS3BucketRegion: "$[taskcat_current_region]"
+    QSS3KeyPrefix: quickstart-aws-sitecore-xp/
+tests:
+  master:
+    template: ./templates/sitecore-xp-master.template.yaml
+    regions: 
+      - us-east-1
+    parameters: 
+      KeyPairName: "$[taskcat_getkeypair]"
+      SitecoreKeyPair: "$[taskcat_getkeypair]"
+      ExternalCertificateARN: override
+      ExternalCertFQDN: ''
+      ExternalR53ZoneID: ''
+      CDDNSName: override
+      CMDNSName: override
+      ISDNSName: override
+      EmailNotifications: override
