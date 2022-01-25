@@ -267,7 +267,7 @@ Resources:
       Value: !Ref VPCPrivateDNS
   
   # Secrets Manager entries
-  SQLAdminUser: # Used for RDS Master user
+  SQLAdminUser: # Used for RDS Admin user
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqladmin
@@ -339,13 +339,13 @@ Resources:
         ExcludeCharacters: '"@/\'
         ExcludePunctuation: true
         IncludeSpace: false
-  SqlMasterUser: #Sitecore SQL DB User
+  SqlMainUser: #Sitecore SQL DB User
     Type: 'AWS::SecretsManager::Secret'
     Properties:
-      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlmaster
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlmain
       Description: Secrets for the Sitecore XP1 Quick Start
       GenerateSecretString:
-        SecretStringTemplate: '{"username": "sqlmasteruser"}'
+        SecretStringTemplate: '{"username": "sqlmainuser"}'
         GenerateStringKey: 'password'
         PasswordLength: 20
         ExcludeCharacters: '"@/\'
@@ -387,13 +387,13 @@ Resources:
         ExcludeCharacters: '"@/\'
         ExcludePunctuation: true
         IncludeSpace: false
-  SqlExmMasterUser: #Sitecore SQL DB User
+  SqlExmMainUser: #Sitecore SQL DB User
     Type: 'AWS::SecretsManager::Secret'
     Properties:
-      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlexmmaster
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlexmmain
       Description: Secrets for the Sitecore XP1 Quick Start
       GenerateSecretString:
-        SecretStringTemplate: '{"username": "sqlexmmasteruser"}'
+        SecretStringTemplate: '{"username": "sqlexmmainuser"}'
         GenerateStringKey: 'password'
         PasswordLength: 20
         ExcludeCharacters: '"@/\'

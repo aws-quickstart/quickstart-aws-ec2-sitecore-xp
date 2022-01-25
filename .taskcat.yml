@@ -1,5 +1,5 @@
 project:
-  name: quickstart-sitecore-xp
+  name: quickstart-aws-sitecore-xp
   regions:
     - ap-northeast-1
     - ap-northeast-2
@@ -62,10 +62,10 @@ tests:
     parameters: 
       KeyPairName: "$[taskcat_getkeypair]"
       SitecoreKeyPair: "$[taskcat_getkeypair]"
-      ExternalCertificateARN: ''
+      ExternalCertificateARN: override
       ExternalCertFQDN: ''
       ExternalR53ZoneID: ''
       CDDNSName: override
       CMDNSName: override
       ISDNSName: override
-      EmailNotifications: user@example.com
+      EmailNotifications: override
