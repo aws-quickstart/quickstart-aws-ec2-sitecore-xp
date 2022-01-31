@@ -1,5 +1,7 @@
 project:
-  name: quickstart-aws-sitecore-xp
+  name: quickstart-aws-ec2-sitecore-xp
+  shorten_stack_name: true
+  s3_regional_buckets: true
   regions:
     - ap-northeast-1
     - ap-northeast-2
@@ -53,7 +55,7 @@ project:
     BackupRetentionPeriod: 1
     QSS3BucketName: "$[taskcat_autobucket]"
     QSS3BucketRegion: "$[taskcat_current_region]"
-    QSS3KeyPrefix: quickstart-aws-sitecore-xp/
+    QSS3KeyPrefix: quickstart-aws-ec2-sitecore-xp/
 tests:
   master:
     template: ./templates/sitecore-xp-master.template.yaml
