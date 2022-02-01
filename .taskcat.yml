@@ -56,7 +56,7 @@ project:
     QSS3KeyPrefix: quickstart-aws-sitecore-xp/
 tests:
   master:
-    template: ./templates/sitecore-xp-master.template.yaml
+    template: ./templates/sitecore-xp-main.template.yaml
     regions: 
       - us-east-1
     parameters: 
