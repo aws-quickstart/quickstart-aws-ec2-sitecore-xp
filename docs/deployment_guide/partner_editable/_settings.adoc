@@ -2,7 +2,7 @@
 :quickstart-github-org: aws-quickstart
 :partner-product-name: Sitecore XP
 :partner-product-short-name: Sitecore
-:partner-company-name: Sitecore
+//:partner-company-name: Sitecore
 :doc-month: January
 :doc-year: 2022
 //:partner-contributors: John Smith, {partner-company-name}
