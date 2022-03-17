@@ -1384,3 +1384,6 @@ Outputs:
   LoadBalancerCortexProc:
     Description: The loadbalancer endpoint for the CortexProcessing DNS CName.
     Value: !GetAtt CortexProcNLB.DNSName
+  Postdeployment:
+    Description: See the deployment guide for postdeployment steps.
+    Value: https://fwd.aws/n9N4D?
