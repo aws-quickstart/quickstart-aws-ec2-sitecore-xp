@@ -555,7 +555,7 @@ Parameters:
     Description: EC2 Key Pair to use for the Sitecore instances.
   SitecorePrefix: 
     Type: String
-    Description: Prefix to be used for the Sitecore installation. This is limited to eight characters.
+    Description: Prefix to be used for the Sitecore installation (limit eight characters).
     MinLength: 1
     MaxLength: 8
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
@@ -883,4 +883,4 @@ Resources:
 Outputs:
   Postdeployment:
     Description: See the deployment guide for postdeployment steps.
-    Value: https://fwd.aws/...
+    Value: https://fwd.aws/P6dEp?

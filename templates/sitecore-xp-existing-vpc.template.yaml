@@ -483,7 +483,7 @@ Parameters:
     Description: EC2 Key Pair to use for the Sitecore instances.
   SitecorePrefix:
     Type: String
-    Description: Prefix to be used for the Sitecore installation. This is limited to 8 characters.
+    Description: Prefix to be used for the Sitecore installation (limit eight characters).
     MinLength: 1
     MaxLength: 8
     AllowedPattern: ^[a-zA-Z0-9]*
@@ -1386,4 +1386,4 @@ Outputs:
     Value: !GetAtt CortexProcNLB.DNSName
   Postdeployment:
     Description: See the deployment guide for postdeployment steps.
-    Value: https://fwd.aws/n9N4D?
+    Value: https://fwd.aws/P6dEp?
