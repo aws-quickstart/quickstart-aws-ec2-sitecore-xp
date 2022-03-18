@@ -1,6 +1,6 @@
 # Sitecore Experience Platform (XP) on AWS — Quick Start
 
-For architectural details, step-by-step instructions, and customization options, see the [deployment guide](https://...).
+For architectural details, step-by-step instructions, and customization options, see the [deployment guide](https://fwd.aws/P6dEp?).
 
 To post feedback, submit feature ideas, or report bugs, use the Issues section of this GitHub repo.
 
