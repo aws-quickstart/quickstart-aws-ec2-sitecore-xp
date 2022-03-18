@@ -574,14 +574,12 @@ Parameters:
     Description: "Prefix in the S3 Bucket for the license.zip file (e.g., license/)." 
     Default: license/
   SOLRUrl:
-    Description: "[Optional] URL of your Solr server/cluster. If no URL is provided a development Solr instance will be 
-      created for this Sitecore deployment. The development Solr instance should not be used within a production environment."
+    Description: "(Optional) URL of your Solr server/cluster. If no URL is provided, a development Solr instance will be created. The development Solr instance should not be used in a production environment."
     Type: String 
     Default: ''
   SOLRCorePrefix: 
     Type: String
-    Description: If you provided a Solr URL, this is the prefix of your preconfigured Solr cores. 
-      If no Solr URL provided, this is the prefix used for the Solr cores on the development Solr instance.
+    Description: If you provided a Solr URL (SOLRUrl), enter the prefix of your preconfigured Solr cores. If a Solr URL is not provided, the prefix you enter is used for Solr cores on the development Solr instance.
   EnvironmentType: 
     Description: Type of Sitecore deployment.
     AllowedValues:
@@ -590,7 +588,7 @@ Parameters:
     Default: Production
     Type: String
   SCLogLevel: 
-    Description: Log level configured for the Sitecore deployment.
+    Description: Configured Sitecore log level.
     AllowedValues:
       - Information
       - Debug
@@ -667,9 +665,7 @@ Parameters:
     AllowedValues:
       - 'False'
       - 'True'
-    Description: "(Optional) Set to true if you want SQL to be always on for the deployment (high availability). 
-      Beware that this only applies when the MSSQL database engine edition (SQLEngineEdition) is set to sqlserver-ee (Enterprise Edition). 
-      If set to false, SQL will be deployed to one Availability Zone."
+    Description: "(Optional) Set to true to enable SQL Server Always On availability groups. This only applies when the MSSQL database engine edition (SQLEngineEdition) is set to sqlserver-ee (Enterprise Edition). If set to false, SQL will be deployed to one Availability Zone."
     Type: String
   BackupRetentionPeriod:
     Default: 7
@@ -698,7 +694,7 @@ Parameters:
     Type: String
 # Redis Configuration
   CacheNodeType:
-    Description: Instance type the nodes are launched under.
+    Description: Cache nodes instance type.
     Type: String
     Default: cache.m4.large
     AllowedValues:

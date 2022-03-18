@@ -489,25 +489,23 @@ Parameters:
     AllowedPattern: ^[a-zA-Z0-9]*
   SitecoreS3Bucket:
     Type: String
-    Description: S3 Bucket name where the Sitecore 9.3 resources are located (installation files, license file, etc.).
+    Description: S3 Bucket name where the Sitecore 9.3 resources, such as installation and license files are located.
       This deployment will put objects into this bucket.
   SCResourcesPrefix:
     Type: String
-    Description: "Prefix in the S3 Bucket for the Sitecore install files (eg: resources/)."
+    Description: "Prefix in the S3 Bucket for the Sitecore install files (e.g., resources/)."
     Default: resources/
   SCLicensePrefix:
     Type: String
-    Description: "Prefix in the S3 Bucket for the license.zip file (eg: license/)." 
+    Description: "Prefix in the S3 Bucket for the license.zip file (e.g., license/)." 
     Default: license/
   SOLRUrl:
     Type: String
-    Description: "[Optional] URL of your Solr server/cluster. If no URL is provided a development Solr instance will be 
-      created for this Sitecore deployment. Note: This development Solr instance should not be used within a production environment."
+    Description: "(Optional) URL of your Solr server/cluster. If no URL is provided, a development Solr instance will be created. The development Solr instance should not be used in a production environment."
     Default: ''
   SOLRCorePrefix:
     Type: String
-    Description: If you provided a Solr URL, this is the prefix of your pre-configured Solr cores. 
-      If no Solr URL provided, this is the prefix used for the Solr cores on the development Solr instance.
+    Description: If you provided a Solr URL (SOLRUrl), enter the prefix of your preconfigured Solr cores. If a Solr URL is not provided, the prefix you enter is used for Solr cores on the development Solr instance.
   EnvironmentType:
     Description: Type of Sitecore deployment.
     AllowedValues:
@@ -516,7 +514,7 @@ Parameters:
     Default: Production
     Type: String
   SCLogLevel:
-    Description: Sitecore deployment configured log level.
+    Description: Configured Sitecore log level.
     AllowedValues:
       - Information
       - Debug
@@ -526,10 +524,10 @@ Parameters:
     Default: Information
     Type: String
   EmailNotifications:
-    Description: Email address for receiving Sitecore auto scaling notifications.
+    Description: Email address for receiving Sitecore scaling notifications.
     Type: String
   LambdaZipsBucketName:
-    Description: '[Optional] Name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
+    Description: '(Optional) Name of the S3 bucket for Lambda zip files. If you leave this parameter blank, an S3 bucket will be created.'
     Type: String
     Default: ''
   # RDS MS SQL
@@ -593,9 +591,7 @@ Parameters:
     AllowedValues:
       - 'False'
       - 'True'
-    Description: "[OPTIONAL] Set to true if you want SQL to be always on (high availability) for the deployment. 
-      Beware that this only applies when SQLEngineEdition is set to sqlserver-ee (Enterprise Edition) as the MSSQL database engine edition. 
-      If set to false, SQL will be deployed to one Availability Zone."
+    Description: "(Optional) Set to true to enable SQL Server Always On availability groups. This only applies when the MSSQL database engine edition (SQLEngineEdition) is set to sqlserver-ee (Enterprise Edition). If set to false, SQL will be deployed to one Availability Zone."
     Type: String
   BackupRetentionPeriod:
     Default: 7
@@ -604,9 +600,8 @@ Parameters:
     Type: Number
   VolumeIops:
     Default: 1000
-    Description:
-      Provisioned IOPS for the SQL Data, Logs and TempDb volumes. This
-      parameter is only applicable when VolumeType is set to "io1"
+    Description: Provisioned IOPS for the SQL Data, Logs and TempDb volumes. This
+      parameter is only applicable when VolumeType is set to io1.
     MaxValue: '20000'
     MinValue: '100'
     Type: Number
@@ -625,7 +620,7 @@ Parameters:
     Type: String
   # Redis Configuration
   CacheNodeType:
-    Description: Instance type the nodes are launched under.
+    Description: Cache nodes instance type.
     Type: String
     Default: cache.m4.large
     AllowedValues:
@@ -642,36 +637,48 @@ Parameters:
       - cache.r4.4xlarge
       - cache.r4.8xlarge
   RedisPort:
-    Description: Port number to be used for Redis ElastiCache.
+    Description: Port number to be used for ElastiCache for Redis.
     Type: Number
     Default: 6379
   # Quick Start Confguration
   QSS3BucketName:
-    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    AllowedPattern: '^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$'
     ConstraintDescription:
-      Quick Start bucket name can include numbers, lowercase
-      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
-      (-).
+      The Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a 
+      hyphen (-).
     Default: aws-quickstart
     Description:
-      S3 bucket name for the Quick Start assets. Quick Start bucket name
-      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
-      It cannot start or end with a hyphen (-).
+      Name of the S3 bucket for your copy of the Quick Start assets. 
+      Keep the default name unless you are customizing the template. 
+      Changing the name updates code references to point to a new Quick 
+      Start location. This name can include numbers, lowercase letters, 
+      uppercase letters, and hyphens, but do not start or end with a hyphen (-). 
+      See https://aws-quickstart.github.io/option1.html.
     Type: String
   QSS3BucketRegion:
     Default: 'us-east-1'
-    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
+    Description: 'AWS Region where the Quick Start S3 bucket (QSS3BucketName) is 
+    hosted. Keep the default Region unless you are customizing the template. 
+    Changing this Region updates code references to point to a new Quick Start location. 
+    When using your own bucket, specify the Region. 
+    See https://aws-quickstart.github.io/option1.html.'
     Type: String
   QSS3KeyPrefix:
-    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    AllowedPattern: '^[0-9a-zA-Z-/]*$'
     ConstraintDescription:
-      Quick Start key prefix can include numbers, lowercase letters,
-      uppercase letters, hyphens (-), and forward slash (/).
+      The Quick Start S3 key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slashes (/). The prefix should
+      end with a forward slash (/).
     Default: quickstart-sitecore-xp/
     Description:
-      S3 key prefix for the Quick Start assets. Quick Start key prefix
-      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
-      forward slash (/).
+      S3 key prefix that is used to simulate a folder for your copy of the 
+      Quick Start assets. Keep the default prefix unless you are customizing 
+      the template. Changing this prefix updates code references to point to 
+      a new Quick Start location. This prefix can include numbers, lowercase 
+      letters, uppercase letters, hyphens (-), and forward slashes (/). End with 
+      a forward slash. See https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html 
+      and https://aws-quickstart.github.io/option1.html.
     Type: String
 Rules:
   CDInstanceNumbers:
