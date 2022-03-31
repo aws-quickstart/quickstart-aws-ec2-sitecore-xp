@@ -1,0 +1,1081 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'This template deploys the Auto Scaling Groups and Launch Configurations. The Launch Configurations launch the instances for the Sitecore roles  (qs-1qppe6871)'
+Parameters:
+  PrivateSubnet1A:
+    Type: String
+    Description: 'ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)'
+  PrivateSubnet2A:
+    Type: String
+    Description: 'ID of the private subnet 2 in Availability Zone 2 (e.g., subnet-a0246dcd)'
+  CDMinSize:
+    Type: String
+    Description: 'The minimum number of Content Delivery instances available.'
+  CDMaxSize:
+    Type: String
+    Description: 'The maximum number of Content Delivery instances available.'
+  CDDesiredCapacity:
+    Type: String
+    Description: 'The desired number of Content Delivery instances available.'
+  CDInstanceType:
+    Type: String
+    Description: 'The Content Delivery instance type'
+  CDScalingMetric:
+    Type: String
+    Description: 'The metric used to determine scaling of the Content Delivery role.'
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization
+      - ASGAverageNetworkIn
+      - ALBRequestCountPerTarget
+  CDScalingMetricValue:
+    Type: String
+    Description: 'The value required for the Content Delivery Scaling Metric (For ASGAverageNetworkIn this value is in bytes).'
+    Default: 70
+  CMInstanceType:
+    Type: String
+    Description: 'The Content Management instance type'
+  CMMinSize:
+    Type: Number
+    Description: 'The minimum number of Content Management instances available.'
+  CMMaxSize:
+    Type: Number
+    Description: 'The maximum number of Content Management instances available.'
+  CMDesiredCapacity:
+    Type: Number
+    Description: 'The desired number of Content Management instances available.'
+  CMScalingMetric:
+    Type: String
+    Description: 'The metric used to determine scaling of the Content Management role.'
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization
+      - ASGAverageNetworkIn
+      - ALBRequestCountPerTarget
+  CMScalingMetricValue:
+    Type: String
+    Description: 'The value required for the Content Management Scaling Metric (For ASGAverageNetworkIn this value is in bytes).'
+    Default: 70
+  SitecoreInstanceSG:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: 'The Sitecore instance security group ID.'
+  SCInstanceProfile:
+    Type: String
+    Description: 'The Sitecore instance profile ARN.'
+  SitecoreKeyPair:
+    Type: String
+    Description: 'The sitecore EC2 key pair'
+  AutoscalingSNS:
+    Type: String
+    Description: 'The SNS topic ARn for Auto Scaling notification'
+  LocalQSScripts:
+    Type: String
+    Description: 'Local path for Quick Start scripts'
+  SCQSPrefix:
+    Type: String
+    Description: 'The Sitecore Quick Start prefix'
+  CDExtTargetGroup:
+    Type: String
+    Description: 'Content Delivery Target Group'
+  CMExtTargetGroup:
+    Type: String
+    Description: 'Content Management Target Group'
+  ISExtTargetGroup:
+    Type: String
+    Description: 'Identity Target Group'
+  ColIntTargetGroup:
+    Type: String
+    Description: 'Collection Target Group'
+  CSIntTargetGroup:
+    Type: String
+    Description: 'Collection Search Target Group'
+  CPIntTargetGroup:
+    Type: String
+    Description: 'Cortex Processing Target Group'
+  CRIntTargetGroup:
+    Type: String
+    Description: 'Cortex Reporting Target Group'
+  MAIntTargetGroup:
+    Type: String
+    Description: 'Marketing Automation Target Group'
+  MARIntTargetGroup:
+    Type: String
+    Description: 'Marketing Automation Reporting Target Group'
+  PrcIntTargetGroup:
+    Type: String
+    Description: 'Processing Target Group'
+  RDIntTargetGroup:
+    Type: String
+    Description: 'Reference Data Target Group'
+  RepIntTargetGroup:
+    Type: String
+    Description: 'Reporting Target Group'
+  InternalDNS:
+    Type: String
+    Description: 'Internal DNS FDQN'
+  CollInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Collection instance type'
+  CollSearchInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Collection Search instance type'
+  CortexProcInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Cortex Processing instance type'
+  CortexRepInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Cortex Reporting instance type'
+  IdentityInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Identity instance type'
+  MarkAutoInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Marketing Automation instance type'
+  MarkAutoRepInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Marketing Automation Reporting instance type'
+  ProcessingInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Processing instance type'
+  RefDataInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Reference Data instance type'
+  ReportingInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Reporting instance type'
+
+Resources:
+  #Create Auto Scaling Groups & Launch Configurations
+  ContentDeliveryASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: !Ref CDDesiredCapacity
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref ContentDeliveryLC
+      MaxSize: !Ref CDMaxSize
+      MinSize: !Ref CDMinSize
+      DesiredCapacity: !Ref CDDesiredCapacity
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref CDExtTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub ContentDelivery-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  ContentDeliveryLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref CDInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CD" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "CD" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-update-web-config.ps1 -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "ContentDeliveryASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
+  CDScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref ContentDeliveryASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: !Ref CDScalingMetric
+        TargetValue: !Ref CDScalingMetricValue
+  ContentManagementASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: !Ref CMDesiredCapacity
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref ContentManagementLC
+      MaxSize: !Ref CMMaxSize
+      MinSize: !Ref CMMinSize
+      DesiredCapacity: !Ref CMDesiredCapacity
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref CMExtTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub ContentManagement-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  ContentManagementLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref CMInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CM" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "CM" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "ContentManagementASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "\n"
+            - "</powershell>\n"
+  CMScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref ContentManagementASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: !Ref CMScalingMetric
+        TargetValue: !Ref CMScalingMetricValue
+  CollectionASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref CollectionLC
+      MaxSize: '2'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref ColIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub Collection-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  CollectionScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref CollectionASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
+  CollectionLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref CollInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Collection" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "Collection" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "CollectionASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
+  CollectionSearchASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref CollectionSearchLC
+      MaxSize: '2'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref CSIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub CollectionSearch-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  CollectionSearchScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref CollectionSearchASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
+  CollectionSearchLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref CollSearchInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CollectionSearch" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "CollectionSearch" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "CollectionSearchASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
+  CortexProcessingASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref CortexProcessingLC
+      MaxSize: '2'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref CPIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub CortexProcessing-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  CortexProcessingScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref CortexProcessingASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
+  CortexProcessingLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref CortexProcInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexProcessing" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "CortexProcessing" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "CortexProcessingASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
+  CortexReportingASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref CortexReportingLC
+      MaxSize: '2'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref CRIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub CortexReporting-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  CortexReportingScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref CortexReportingASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
+  CortexReportingLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref CortexRepInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexReporting" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "CortexReporting" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "CortexReportingASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
+  IdentityASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref IdentityLC
+      MaxSize: '2'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        # - !Ref ISIntTargetGroup
+        - !Ref ISExtTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub Identity-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  IdentityScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref IdentityASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
+  IdentityLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref IdentityInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "IdentityServer" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "IdentityServer" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "IdentityASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
+  MarketingAutomationASG:
+    DependsOn: CollectionSearchASG # Marketing Automation requires that Collection Search be running or the services will not start, and the template will fail
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref MarketingAutomationLC
+      MaxSize: '2'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref MAIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub MarketingAutomation-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  MarketingAutomationScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref MarketingAutomationASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
+  MarketingAutomationLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref MarkAutoInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomation" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "MarketingAutomation" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}" -$StackName '
+            - !Sub '"${AWS::StackName}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "MarketingAutomationASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
+  MarketingAutoRepASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref MarketingAutoRepLC
+      MaxSize: '2'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref MARIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub MarketingAutomationReporting-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  MarketingAutoRepScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref MarketingAutoRepASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
+  MarketingAutoRepLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref MarkAutoRepInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomationReporting" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "MarketingAutomationReporting" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "MarketingAutoRepASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
+  ProcessingASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref ProcessingLC
+      MaxSize: '2'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref PrcIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub Processing-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  ProcessingScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref ProcessingASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
+  ProcessingLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref ProcessingInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Prc" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "Prc" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "ProcessingASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
+  ReferenceDataASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref ReferenceDataLC
+      MaxSize: '2'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref RDIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub ReferenceData-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  ReferenceDataScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref ReferenceDataASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
+  ReferenceDataLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref RefDataInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "ReferenceData" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "ReferenceData" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "ReferenceDataASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
+  ReportingASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    UpdatePolicy:
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: true
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        WaitOnResourceSignals: true
+        PauseTime: PT15M
+    Properties:
+      LaunchConfigurationName: !Ref ReportingLC
+      MaxSize: '2'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref RepIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: Name
+          Value: !Sub Reporting-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
+  ReportingScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref ReportingASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
+  ReportingLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref ReportingInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Rep" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-xp-install-resources.ps1 -Role "Rep" -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "ReportingASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
+Outputs:
+  Collection:
+    Description: Collection Role URL
+    Value: !Sub coll.${InternalDNS}
+  CollectionSearch:
+    Description: Collection Search Role URL
+    Value: !Sub collsearch.${InternalDNS}
+  ReferenceData:
+    Description: Reference Data Role URL
+    Value: !Sub refdata.${InternalDNS}
+  MarketingAutomation:
+    Description: Marketing Automation Role URL
+    Value: !Sub mktauto.${InternalDNS}
+  MarketingAutomationReporting:
+    Description: Marketing Automation Reporting Role URL
+    Value: !Sub mktautorep.${InternalDNS}
+  CortexProcessing:
+    Description: Cortex Processing Role URL
+    Value: !Sub cortexproc.${InternalDNS}
+  CortexReporting:
+    Description: Cortex Reporting Role URL
+    Value: !Sub cortexrep.${InternalDNS}
+  Processing:
+    Description: Processing Role URL
+    Value: !Sub proc.${InternalDNS}
+  Reporting:
+    Description: Reporting Role URL
+    Value: !Sub rep.${InternalDNS}
+  

@@ -1,0 +1,526 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Creates the required parameters in Parameter Store (qs-1qppe686b)'
+Parameters:
+  SCPrefix:
+    Type: String
+    Description: ''
+  SOLRCorePrefix:
+    Type: String
+    Description: ''
+  SOLRUrl:
+    Type: String
+    Description: ''
+  EnvironmentType:
+    Type: String
+    Description: ''
+  SCLogLevel:
+    Type: String
+    Description: ''
+  SCQSPrefix:
+    Type: String
+    Description: ''
+  SCS3Bucket:
+    Type: String
+    Description: ''
+  SCResourcesPrefix:
+    Type: String
+    Description: ''
+  SCLicensePrefix:
+    Type: String
+    Description: ''
+  CDDNSName:
+    Type: String
+    Description: ''
+  CMDNSName:
+    Type: String
+    Description: ''
+  VPCPrivateDNS:
+    Type: String
+    Description: ''
+  ISDNSName:
+    Type: String
+    Description: ''
+  IntDNS:
+    Type: String
+    Description: ''
+Conditions:
+  CreateDevSolr: !Equals [!Ref 'SOLRUrl', '']
+Resources:
+  # Sitecore Installation
+  CustomAmiName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/instance/ami/custom
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Sub Sitecore-CustomAMI-${SCQSPrefix}
+  SitecoreS3Bucket:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/s3bucket/name
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref SCS3Bucket
+  S3ResourcePrefix:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/s3bucket/scresourcesprefix
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref SCResourcesPrefix
+  S3LicensePrefix:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/s3bucket/sclicenseprefix
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref SCLicensePrefix
+  S3CertificatePrefix:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/s3bucket/certificateprefix
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Sub 'sitecore-certificates-${SCQSPrefix}/'
+  LocalResourcesPath:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/localresourcespath
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: "c:\\resources"
+  LocalQuickStartResourcesPath:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/localqsresourcespath
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: "c:\\quickstart\\scripts"
+  ExportRootCertName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/root/exportname
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: 'Sitecore-QuickStart-RootCertificate'
+  ExportInstanceCertName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/instance/exportname
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: 'Sitecore-QuickStart-InstanceCertificate'
+  ExportxConnectCertName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/xconnect/exportname
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: 'Sitecore-QuickStart-xconnectCertificate'
+  RootCertFriendlyName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/root/friendlyname
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: 'Sitecore-QuickStart-RootCertificate'
+  RootCertDnsNames:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/root/dnsnames
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: '127.0.0.1'
+  InstanceCertFriendlyName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/instance/friendlyname
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: 'Sitecore-QuickStart-InstanceCertificate'
+  xConnectCertFriendlyName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/xconnect/friendlyname
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: 'Sitecore-QuickStart-XConnectCertificate'
+  InstanceCertDnsNames:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/instance/dnsnames
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Sub '*.${IntDNS},127.0.0.1'
+      # Value: !Sub "*.${AWS::Region}.sitecore.internal"
+  xConnectCertDnsNames:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/xconnect/dnsnames
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Sub 'collsearch.${IntDNS},127.0.0.1'
+      # Value: !Sub "*.${AWS::Region}.sitecore.internal"
+  CertStoreLocation:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/storelocation
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: 'LocalMachine'
+  #Sitecore Configuration
+  SitecorePrefix: # used for the sitecore software configuration
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/sitecoreprefix
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref SCPrefix
+  ContDelDNS:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/service/cddns
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref CDDNSName
+  ContMgmtDNS:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/service/cmdns
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref CMDNSName
+  IdentityDNS:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/service/isdns
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref ISDNSName
+  InternalDNS: # Defines the internal DNS name for R53
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/service/internaldns
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref IntDNS
+  PasswordRecoveryUrl:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/service/passwordrecoveryurl
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref CMDNSName
+  allowedCorsOrigins:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/service/allowedCorsOrigins
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: '*'
+  Environment:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/environment
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref EnvironmentType
+  LogLevel:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/logLevel
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref SCLogLevel
+  SolrCorePrefix:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/solrcoreprefix
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref SOLRCorePrefix
+  SolrUrl: # The full URL for the Solr Server
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/solruri
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !If [
+          CreateDevSolr,
+          !Sub 'https://solrdev.${IntDNS}:8983/solr',
+          !Ref 'SOLRUrl',
+        ] # If no Solr URL provided, then create URL https:\\solrdev.internaldns, else use provided url
+  SolrDevFQDN: # The FQDN to use for the solrdev installation
+    Type: AWS::SSM::Parameter
+    Condition: CreateDevSolr
+    Properties:
+      Name: !Sub /${SCQSPrefix}/service/solrdevfqdn
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Sub 'solrdev.${IntDNS}' # If no Solr URL provided, then create solrdev.internaldns, else use provided url
+  InternalPrivateDNS:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/InternalPrivateDNS
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref VPCPrivateDNS
+  
+  # Secrets Manager entries
+  SQLAdminUser: # Used for RDS Admin user
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqladmin
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqladminuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlMessagingUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlmessaging
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlmessaginguser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\`'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlProcessingEngineUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlprocessingengine
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlprocessingengineuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlReportingUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlreporting
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlreportinguser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlCoreUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlcore
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlcoreuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlSecurityUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlsecurity
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlsecurityuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlMainUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlmain
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlmainuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlWebUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlweb
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlwebuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlReferenceDataUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlreferencedata
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlreferencedatauser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlFormsUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlforms
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlformsuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlExmMainUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlexmmain
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlexmmainuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlProcessingPoolsUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlprocessingpools
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlprocessingpoolsuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlProcessingTasksUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlprocessingtasks
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlprocessingtasksuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlCollectionUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlcollection
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlcollectionuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlMarketingAutomationUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sqlmarketingautomation
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlmarketingautomationuser"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  ReportingServiceAPIKey:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-reportingserviceapikey
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "none"}'
+        GenerateStringKey: 'APIKey'
+        PasswordLength: 32
+        ExcludePunctuation: true
+        IncludeSpace: false
+  ClientSecret:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-clientsecret
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "none"}'
+        GenerateStringKey: 'secret'
+        PasswordLength: 20
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SitecoreIdentitySecret:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sitecoreidentitysecret
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "none"}'
+        GenerateStringKey: 'secret'
+        PasswordLength: 20
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SitecoreAdminPassword: # Admin username and password for Sitecore
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-sitecoreadmin
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "admin"}'
+        GenerateStringKey: 'Password'
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  ExportCertPassword: # Password for the certificate Export
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${SCQSPrefix}-certpass
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"certificatename": "Export-Certificate"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 20
+        ExcludePunctuation: true
+        IncludeSpace: false
+
+Outputs:
+  CustomAmiName:
+    Description: The name of the Quick Start Sitecore custom AMI.
+    Value: !GetAtt CustomAmiName.Value
+  SCLocalResourcePath:
+    Description: The location of the Sitecore resources on the AMI.
+    Value: !GetAtt LocalResourcesPath.Value
+  QSLocalResourcePath:
+    Description: The location of the Quick Start resources on the AMI.
+    Value: !GetAtt LocalQuickStartResourcesPath.Value
+  InstanceCertificateLocation:
+    Description: Location of the Sitecore generated certificate in the S3 bucket.
+    Value: !Join
+      - ''
+      - - !GetAtt S3CertificatePrefix.Value
+        - !GetAtt ExportInstanceCertName.Value
+        - '.pfx'
+  SolrURL:
+    Description: The URL of the Solr instance.
+    Value: !GetAtt SolrUrl.Value

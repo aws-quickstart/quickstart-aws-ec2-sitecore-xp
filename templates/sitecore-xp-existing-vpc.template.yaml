@@ -1,0 +1,1396 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Deploys Sitecore into an existing VPC  (qs-1qppe684j)'
+Metadata:
+  QuickStartDocumentation:
+    EntrypointName: "Launch into an existing VPC"
+    OptionalParameters:
+      - IntDNS
+      - IntVPCR53Zone
+      - ExternalCertFQDN
+      - ExternalR53ZoneID
+      - SOLRUrl
+      - LambdaZipsBucketName
+      - SQLAlwaysOn
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network configuration
+        Parameters:
+          - VPCCIDR
+          - VPCID
+          - PrivateSubnet1A
+          - PrivateSubnet2A
+          - PublicSubnet1
+          - PublicSubnet2
+      - Label:
+          default: Sitecore Networking Configuration
+        Parameters:
+          - CDDNSName
+          - CMDNSName
+          - ISDNSName
+          - IntDNS
+          - IntVPCR53Zone
+          - VPCPrivateDNS # true/false - this is here for instances where deploying into a VPC that has DHCP Option Sets that utilize private (non-Route53) DNS servers. EX: Active Directory provided DNS
+          - ExternalCertificateARN
+          - ExternalCertFQDN
+          - ExternalR53ZoneID
+      - Label:
+          default: Sitecore Configuration
+        Parameters:
+          - CDMinSize
+          - CDMaxSize
+          - CDDesiredCapacity
+          - CDInstanceType
+          - CDScalingMetric
+          - CDScalingMetricValue
+          - CMMinSize
+          - CMMaxSize
+          - CmIdRdInstanceType
+          - CMScalingMetric
+          - CMScalingMetricValue
+          - CollCSInstanceType
+          - MaCpPrcInstanceType
+          - MarCrRepInstanceType
+          - SitecoreKeyPair
+          - SitecorePrefix
+          - SitecoreS3Bucket
+          - SCResourcesPrefix
+          - SCLicensePrefix
+          - SOLRUrl
+          - SOLRCorePrefix
+          - EnvironmentType
+          - SCLogLevel
+          - EmailNotifications
+          - LambdaZipsBucketName
+      - Label:
+          default: SQL Server configuration
+        Parameters:
+          - DBInstanceClass
+          - DBAutoMinorVersionUpgrade
+          - SQLEngineEdition
+          - SQLEngineVersion
+          - SQLAlwaysOn
+          - VolumeSize
+          - VolumeType
+          - VolumeIops
+          - BackupRetentionPeriod
+      - Label:
+          default: Redis ElastiCache configuration
+        Parameters:
+          - CacheNodeType
+          - RedisPort
+      - Label:
+          default: AWS Quick Start configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3BucketRegion
+          - QSS3KeyPrefix
+    ParameterLabels:
+      # VPC
+      VPCID:
+        default: VPC ID
+      VPCCIDR:
+        default: VPC CIDR
+      PrivateSubnet1A:
+        default: Private subnet 1A ID
+      PrivateSubnet2A:
+        default: Private subnet 2A ID
+      PublicSubnet1:
+        default: Public subnet 1 ID
+      PublicSubnet2:
+        default: Public subnet 2 ID
+      # Sitecore Network Configuration
+      CDDNSName:
+        default: Content delivery FQDN
+      CMDNSName:
+        default: Content management FQDN
+      ISDNSName:
+        default: Identity server FQDN
+      IntDNS:
+        default: Internal DNS suffix
+      IntVPCR53Zone:
+        default: Internal Route 53 hosted zone ID
+      VPCPrivateDNS:
+        default: Private (non-Route 53) DNS
+      ExternalCertificateARN:
+        default: External ACM ARN
+      ExternalCertFQDN:
+        default: External certificate domain name
+      ExternalR53ZoneID:
+        default: External Route 53 zone ID
+      # Sitecore Configuration
+      CDMinSize:
+        default: Minimum content delivery instances
+      CDMaxSize:
+        default: Maximum content delivery instances
+      CDDesiredCapacity:
+        default: Desired content delivery instances
+      CDInstanceType:
+        default: Content delivery
+      CDScalingMetric:
+        default: Content delivery scaling metric
+      CDScalingMetricValue:
+        default: Content delivery scaling metric value
+      CMMinSize:
+        default: Minimum content management instances
+      CMMaxSize:
+        default: Maximum content management instances
+      CmIdRdInstanceType:
+        default: Content management, identity, reference data
+      CMScalingMetric:
+        default: Content management scaling metric
+      CMScalingMetricValue:
+        default: Content management scaling metric value
+      CollCSInstanceType:
+        default: Collection, collection search
+      MaCpPrcInstanceType:
+        default: Marketing automation, cortex processing, processing
+      MarCrRepInstanceType:
+        default: Marketing automation reporting, cortex reporting, reporting
+      SitecoreKeyPair:
+        default: EC2 Key Pair for Sitecore instances
+      SitecorePrefix:
+        default: Sitecore installation prefix
+      SitecoreS3Bucket:
+        default: Sitecore resources S3 Bucket
+      SCResourcesPrefix:
+        default: Sitecore installation files prefix
+      SCLicensePrefix:
+        default: Sitecore license file prefix
+      SOLRCorePrefix:
+        default: Solr cores prefix
+      SOLRUrl:
+        default: Solr server/cluster URL
+      EnvironmentType:
+        default: Sitecore environment type
+      SCLogLevel:
+        default: Sitecore log level
+      EmailNotifications:
+        default: Email notifications
+      LambdaZipsBucketName:
+        default: Lambda S3 bucket name
+    # SQL Configuration
+      DBInstanceClass:
+        default: Database instance class
+      DBAutoMinorVersionUpgrade:
+        default: Database auto minor version upgrade
+      SQLEngineEdition:
+        default: MSSQL database engine edition
+      SQLEngineVersion:
+        default: MSSQL database engine version
+      SQLAlwaysOn:
+        default: MSSQL always on
+      VolumeIops:
+        default: Data volume IOPS
+      VolumeSize:
+        default: Data volume size
+      VolumeType:
+        default: Data volume type
+      BackupRetentionPeriod:
+        default: Retention period
+      # Redis Configuration
+      CacheNodeType:
+        default: Redis cache node type
+      RedisPort:
+        default: Redis port
+      # Quick Start Config Params
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3BucketRegion:
+        default: Quick Start S3 bucket region
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
+Parameters:
+  VPCID:
+    Description: ID of the VPC (e.g., vpc-0343606e)
+    Type: AWS::EC2::VPC::Id
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/16
+    Description: CIDR Block for the VPC
+    Type: String
+  PrivateSubnet1A:
+    Description: ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet2A:
+    Description: ID of the private subnet 2 in Availability Zone 2 (e.g., subnet-a0246dcd)
+    Type: AWS::EC2::Subnet::Id
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet::Id
+    Description: Public subnet in Availability Zone 1
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet::Id
+    Description: Public subnet in Availability Zone 2
+  # Sitecore Networking Configuration
+  CDDNSName:
+    Type: String
+    Description: 'Fully qualified domain name for the content delivery role (e.g., home.example.com).'
+  CMDNSName:
+    Type: String
+    Description: Fully qualified domain name for the content management role.
+  ISDNSName:
+    Type: String
+    Description: Fully qualified domain name for the identity server role.
+  IntDNS:
+    Type: String
+    Default: ''
+    Description: "[Optional] Internal DNS name. If left blank, one is generated for you. If you have a private Route 53 hosted zone 
+      or a private managed DNS connected to your VPC, please provide the DNS suffix of the hosted zone."
+  IntVPCR53Zone:
+    Type: String
+    Default: ''
+    Description: "[Optional] If you already have a private Route 53 hosted zone connected to your VPC, please provide the Route 53 hosted zone ID"
+  VPCPrivateDNS:
+    Type: String
+    AllowedValues:
+      - 'True'
+      - 'False'
+    Default: 'False'
+    Description: "Set to true if you have your own provided DNS servers for your VPC. Should you have your own DNS servers, 
+                  you must create Canonical Name Record (CNAME) entries for the Sitecore roles. Please see the deloyment guide for details.
+                  set to false if you have a private Route 53 hosted zone connected to your VPC."
+  ExternalCertificateARN:
+    Type: String
+    Description: "[Optional] Provide the Amazon Resource Name (ARN) of the wildcard certificate created in Amazon Certificate Manager. If not provided, 
+      a wildcard certificate will be created for you. If you provide an ARN, you do not need to provide details 
+      for ExternalCertFQDN or ExternalRoute53ZoneID."
+  ExternalCertFQDN: 
+    Type: String
+    Description: "[Optional] External domain name for the Sitecore deployment (e.g., example.com). 
+      This is created in ACM as a wildcard certificate (e.g., *.example.com) if no value is provided for ExternalCertificateARN."
+  ExternalR53ZoneID: 
+    Type: String
+    Description: "[Optional] Provide the Route 53–hosted zone ID for ExternalCertFQDN if you require certificate validation to be done via DNS. 
+      If no Route 53 hosted zone ID is provided, validation is done via email."
+  #Sitecore Configuration
+  CDMinSize:
+    Type: String
+    Default: '1'
+    Description: Minimum number of content delivery instances available.
+  CDMaxSize:
+    Type: String
+    Default: '3'
+    Description: Maximum number of content delivery instances available.
+  CDDesiredCapacity:
+    Type: String
+    Default: '2'
+    Description: Desired number of content delivery instances available.
+  CDInstanceType:
+    AllowedValues:
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.8xlarge
+    - m5a.large
+    - m5a.xlarge
+    - m5a.2xlarge
+    - m5a.4xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.8xlarge
+    - r5a.large
+    - r5a.xlarge
+    - r5a.2xlarge
+    - r5a.4xlarge
+    - r5a.8xlarge
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    ConstraintDescription: Choose an instance type. m3.medium or larger recommended.
+    Default: m5a.xlarge
+    Description: Content delivery instance type.
+    Type: String
+  CDScalingMetric:
+    Description: Metric used to determine scaling of the content delivery role.
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization
+      - ASGAverageNetworkIn
+      - ALBRequestCountPerTarget
+    Type: String
+  CDScalingMetricValue:
+    Description: Value required for the scaling metric (For ASGAverageNetworkIn this value is in bytes).
+    Default: 70
+    Type: Number
+  CMMinSize:
+    Type: String
+    Default: '1'
+    Description: Minimum number of content management instances available.
+  CMMaxSize:
+    Type: String
+    Default: '2'
+    Description: Maximum number of content management instances available.
+  CmIdRdInstanceType:
+    AllowedValues:
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.8xlarge
+    - m5a.large
+    - m5a.xlarge
+    - m5a.2xlarge
+    - m5a.4xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.8xlarge
+    - r5a.large
+    - r5a.xlarge
+    - r5a.2xlarge
+    - r5a.4xlarge
+    - r5a.8xlarge
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    ConstraintDescription: Choose an instance type. m3.medium or larger recommended.
+    Default: m5a.xlarge
+    Description: Instance type, applied to the roles of content management, identity, and reference data.
+    Type: String
+  CMScalingMetric:
+    Description: Metric used to determine scaling of the content management role.
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization
+      - ASGAverageNetworkIn
+      - ALBRequestCountPerTarget
+    Type: String
+  CMScalingMetricValue:
+    Description: Value required for the scaling metric (For ASGAverageNetworkIn this value is in bytes).
+    Default: 70
+    Type: Number
+  CollCSInstanceType:
+    AllowedValues:
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.8xlarge
+    - m5a.large
+    - m5a.xlarge
+    - m5a.2xlarge
+    - m5a.4xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.8xlarge
+    - r5a.large
+    - r5a.xlarge
+    - r5a.2xlarge
+    - r5a.4xlarge
+    - r5a.8xlarge
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    ConstraintDescription: Choose an instance type. m5.xlarge or larger recommended.
+    Default: m5a.xlarge
+    Description: Instance type, applied to the roles of collection, collection search.
+    Type: String
+  MaCpPrcInstanceType:
+    AllowedValues:
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.8xlarge
+    - m5a.large
+    - m5a.xlarge
+    - m5a.2xlarge
+    - m5a.4xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.8xlarge
+    - r5a.large
+    - r5a.xlarge
+    - r5a.2xlarge
+    - r5a.4xlarge
+    - r5a.8xlarge
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    ConstraintDescription: Choose an instance type. m5.xlarge or larger recommended.
+    Default: m5a.xlarge
+    Description: Instance type, applied to the roles of marketing automation, cortex processing, and processing.
+    Type: String
+  MarCrRepInstanceType:
+    AllowedValues:
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.8xlarge
+    - m5a.large
+    - m5a.xlarge
+    - m5a.2xlarge
+    - m5a.4xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.8xlarge
+    - r5a.large
+    - r5a.xlarge
+    - r5a.2xlarge
+    - r5a.4xlarge
+    - r5a.8xlarge
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    ConstraintDescription: Choose an instance type. m5.xlarge or larger recommended.
+    Default: m5a.xlarge
+    Description: Instance type, applied to the roles of marketing automation reporting, cortex reporting, and reporting.
+    Type: String
+  SitecoreKeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: EC2 Key Pair to use for the Sitecore instances.
+  SitecorePrefix:
+    Type: String
+    Description: Prefix to be used for the Sitecore installation (limit eight characters).
+    MinLength: 1
+    MaxLength: 8
+    AllowedPattern: ^[a-zA-Z0-9]*
+  SitecoreS3Bucket:
+    Type: String
+    Description: S3 Bucket name where the Sitecore 9.3 resources, such as installation and license files are located.
+      This deployment will put objects into this bucket.
+  SCResourcesPrefix:
+    Type: String
+    Description: "Prefix in the S3 Bucket for the Sitecore install files (e.g., resources/)."
+    Default: resources/
+  SCLicensePrefix:
+    Type: String
+    Description: "Prefix in the S3 Bucket for the license.zip file (e.g., license/)." 
+    Default: license/
+  SOLRUrl:
+    Type: String
+    Description: "(Optional) URL of your Solr server/cluster. If no URL is provided, a development Solr instance will be created. The development Solr instance should not be used in a production environment."
+    Default: ''
+  SOLRCorePrefix:
+    Type: String
+    Description: If you provided a Solr URL (SOLRUrl), enter the prefix of your preconfigured Solr cores. If a Solr URL is not provided, the prefix you enter is used for Solr cores on the development Solr instance.
+  EnvironmentType:
+    Description: Type of Sitecore deployment.
+    AllowedValues:
+      - Production
+      - Development
+    Default: Production
+    Type: String
+  SCLogLevel:
+    Description: Configured Sitecore log level.
+    AllowedValues:
+      - Information
+      - Debug
+      - Error
+      - Warning
+      - None
+    Default: Information
+    Type: String
+  EmailNotifications:
+    Description: Email address for receiving Sitecore scaling notifications.
+    Type: String
+  LambdaZipsBucketName:
+    Description: '(Optional) Name of the S3 bucket for Lambda zip files. If you leave this parameter blank, an S3 bucket will be created.'
+    Type: String
+    Default: ''
+  # RDS MS SQL
+  DBAutoMinorVersionUpgrade:
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'false'
+    Description: If set to true, minor engine upgrades are applied to the database instance. 
+      If set to false, minor engine upgrades are not applied to the database instance.
+    Type: String
+  DBInstanceClass:
+    AllowedValues:
+      - db.m5.large
+      - db.m5.xlarge
+      - db.m5.2xlarge
+      - db.m5.4xlarge
+      - db.m5.12xlarge
+      - db.m5.24xlarge
+      - db.m4.large
+      - db.m4.xlarge
+      - db.m4.2xlarge
+      - db.m4.4xlarge
+      - db.m4.10xlarge
+      - db.m4.16xlarge
+      - db.r4.large
+      - db.r4.xlarge
+      - db.r4.2xlarge
+      - db.r4.4xlarge
+      - db.r4.8xlarge
+      - db.r4.16xlarge
+    ConstraintDescription: 'Must select a valid database instance type.'
+    Default: db.r4.2xlarge
+    Description: Name of the compute and memory capacity class of the database instance.
+    Type: String
+  SQLEngineEdition:
+    AllowedValues:
+      - sqlserver-ee
+      - sqlserver-se
+      - sqlserver-ex
+      - sqlserver-web
+    ConstraintDescription: 'Must select a MSSQL database engine edition.'
+    Default: sqlserver-se
+    Description: MSSQL database engine edition.
+    Type: String
+  SQLEngineVersion:
+    AllowedValues:
+      - 14.00.3381.3.v1
+      - 14.00.3223.3.v1
+      - 14.00.3192.2.v1
+      - 14.00.3049.1.v1
+      - 14.00.3035.2.v1
+      - 14.00.3015.40.v1
+      - 14.00.1000.169.v1
+    ConstraintDescription: 'Must select a MSSQL database engine version.'
+    Default: 14.00.3381.3.v1
+    Description: MSSQL database engine version.
+    Type: String
+  SQLAlwaysOn:
+    Default: 'False'
+    AllowedValues:
+      - 'False'
+      - 'True'
+    Description: "(Optional) Set to true to enable SQL Server Always On availability groups. This only applies when the MSSQL database engine edition (SQLEngineEdition) is set to sqlserver-ee (Enterprise Edition). If set to false, SQL will be deployed to one Availability Zone."
+    Type: String
+  BackupRetentionPeriod:
+    Default: 7
+    Description: Number of days automated backups are retained. Setting this parameter to a positive number enables backups. 
+      Setting this parameter to 0 disables automated backups. 
+    Type: Number
+  VolumeIops:
+    Default: 1000
+    Description: Provisioned IOPS for the SQL Data, Logs and TempDb volumes. This
+      parameter is only applicable when VolumeType is set to io1.
+    MaxValue: '20000'
+    MinValue: '100'
+    Type: Number
+  VolumeSize:
+    Default: 500
+    Description: Volume size (GB) for the SQL data, logs, and TempDb volumes.
+    MaxValue: '16000'
+    MinValue: '100'
+    Type: Number
+  VolumeType:
+    AllowedValues:
+      - gp2
+      - io1
+    Default: gp2
+    Description: Volume type for the SQL Data, Logs and TempDb volumes
+    Type: String
+  # Redis Configuration
+  CacheNodeType:
+    Description: Cache nodes instance type.
+    Type: String
+    Default: cache.m4.large
+    AllowedValues:
+      - cache.t2.micro
+      - cache.t2.small
+      - cache.t2.medium
+      - cache.m4.large
+      - cache.m4.xlarge
+      - cache.m4.xlarge
+      - cache.m4.4xlarge
+      - cache.r4.large
+      - cache.r4.xlarge
+      - cache.r4.2xlarge
+      - cache.r4.4xlarge
+      - cache.r4.8xlarge
+  RedisPort:
+    Description: Port number to be used for ElastiCache for Redis.
+    Type: Number
+    Default: 6379
+  # Quick Start Confguration
+  QSS3BucketName:
+    AllowedPattern: '^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$'
+    ConstraintDescription:
+      The Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a 
+      hyphen (-).
+    Default: aws-quickstart
+    Description:
+      Name of the S3 bucket for your copy of the Quick Start assets. 
+      Keep the default name unless you are customizing the template. 
+      Changing the name updates code references to point to a new Quick 
+      Start location. This name can include numbers, lowercase letters, 
+      uppercase letters, and hyphens, but do not start or end with a hyphen (-). 
+      See https://aws-quickstart.github.io/option1.html.
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: 'AWS Region where the Quick Start S3 bucket (QSS3BucketName) is 
+    hosted. Keep the default Region unless you are customizing the template. 
+    Changing this Region updates code references to point to a new Quick Start location. 
+    When using your own bucket, specify the Region. 
+    See https://aws-quickstart.github.io/option1.html.'
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: '^[0-9a-zA-Z-/]*$'
+    ConstraintDescription:
+      The Quick Start S3 key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slashes (/). The prefix should
+      end with a forward slash (/).
+    Default: quickstart-sitecore-xp/
+    Description:
+      S3 key prefix that is used to simulate a folder for your copy of the 
+      Quick Start assets. Keep the default prefix unless you are customizing 
+      the template. Changing this prefix updates code references to point to 
+      a new Quick Start location. This prefix can include numbers, lowercase 
+      letters, uppercase letters, hyphens (-), and forward slashes (/). End with 
+      a forward slash. See https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html 
+      and https://aws-quickstart.github.io/option1.html.
+    Type: String
+Rules:
+  CDInstanceNumbers:
+    Assertions:
+      - AssertDescription: Maximum number of Content Delivery instances must be larger than the minimum number specified.
+        Assert: !Not [!Equals [!Ref CDMinSize, !Ref CDMaxSize]]
+  CMInstanceNumbers:
+    Assertions:
+      - AssertDescription: Maximum number of Content Management instances must be larger than the minimum number specified.
+        Assert: !Not [!Equals [!Ref CMMinSize, !Ref CMMaxSize]]
+Conditions:
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+  CreateLambdaZipsBucket: !Equals [!Ref 'LambdaZipsBucketName', '']
+  InternalDNSName: !Equals [!Ref 'IntDNS', '']
+  CreateDevSolr: !Equals [!Ref 'SOLRUrl', '']
+  CreateInternalR53: !Equals [!Ref 'VPCPrivateDNS', 'False'] # If there is no provided internal DNS, then create a R53 hosted Zone
+  CreateExternalCertificate: !Equals [!Ref 'ExternalCertificateARN', '']
+
+Resources:
+  # Local region S3 bucket for Lambda functions
+  LambdaZipsBucket:
+    Type: AWS::S3::Bucket
+    Condition: CreateLambdaZipsBucket
+  AutoscalingSNS:
+    Type: AWS::SNS::Topic
+  ASGSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !Ref EmailNotifications
+      Protocol: email
+      TopicArn: !Ref 'AutoscalingSNS'
+  # Create required Security Groups
+  SitecoreInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Used for the Sitecore Instances
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: !Ref VPCCIDR
+          Description: RDP Traffic from within the VPC
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref VPCCIDR
+          Description: HTTPS Traffic from within the VPC
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref VPCCIDR
+          Description: HTTP Traffic from within the VPC
+        - IpProtocol: tcp
+          FromPort: 8983
+          ToPort: 8983
+          CidrIp: !Ref VPCCIDR
+          Description: HTTPS Traffic from within the VPC
+  LoadBalancerInternalSG:
+    # DependsOn: SitecoreInstanceSG
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Used for the Internal ALB
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref SitecoreInstanceSG
+          Description: HTTPS Traffic from within the VPC
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref SitecoreInstanceSG
+          Description: HTTPS Traffic from within the VPC
+        - IpProtocol: tcp
+          FromPort: 8983
+          ToPort: 8983
+          SourceSecurityGroupId: !Ref SitecoreInstanceSG
+          Description: HTTPS Traffic from within the VPC
+  LoadBalancerExternalSG:
+    # DependsOn: SitecoreServerSG
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Used for the External ALB
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+  RDSsqlSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for RDS MSSQL.
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 1433
+          ToPort: 1433
+          CidrIp: !Ref 'VPCCIDR'
+  RedisSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Used for the Redis ElastiCache cluster
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref RedisPort
+          ToPort: !Ref RedisPort
+          CidrIp: !Ref 'VPCCIDR'
+  # Internal ALB
+  LoadBalancerInternal:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Scheme: internal
+      IpAddressType: ipv4
+      SecurityGroups:
+        - !Ref LoadBalancerInternalSG
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  # External ALB
+  LoadBalancerExternal:
+    # DependsOn: LoadBalancerExternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Scheme: internet-facing
+      IpAddressType: ipv4
+      SecurityGroups:
+        - !Ref LoadBalancerExternalSG
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+  # XConnect NLB
+  XConnectNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  CollectionNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  RefDataNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  MarketAutoRepNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  MarketAutoNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  CortexRepNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  CortexProcNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+
+
+  # Parameter entries for internal & External ALB - put here so that Parameter Stack not waiting
+  InternalALBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/private/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/private/alb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt LoadBalancerInternal.DNSName
+  ExternalALBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/public/alb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt LoadBalancerExternal.DNSName
+  CollNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/collection/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt CollectionNLB.DNSName
+  RefDataNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/RefData/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt RefDataNLB.DNSName
+  MarketAutoRepNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/MarketAutoRep/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt MarketAutoRepNLB.DNSName
+  MarketAutoNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/MarketAuto/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt MarketAutoNLB.DNSName
+  CortexProcNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/CortexProc/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt CortexProcNLB.DNSName
+  CortexRepNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/CortexRep/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt CortexRepNLB.DNSName
+  XConnectNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/xconnect/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt XConnectNLB.DNSName
+
+  # Sitecore Route 53 Stack
+  R53Stack:
+    Type: AWS::CloudFormation::Stack
+    Condition: CreateInternalR53
+    Properties:
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-r53.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        InternalR53DNS: !If [InternalDNSName, !Sub '${AWS::Region}.sitecore.internal', !Ref IntDNS]
+        VPCID: !Ref VPCID
+        LoadBalancerInternalDNS: !GetAtt LoadBalancerInternal.DNSName
+        XConnectNLBDNS: !GetAtt XConnectNLB.DNSName
+        CollectionNLBDNS: !GetAtt CollectionNLB.DNSName
+        RefDataNLBDNS: !GetAtt RefDataNLB.DNSName
+        MarketAutoRepNLBDNS: !GetAtt MarketAutoRepNLB.DNSName
+        MarketAutoNLBDNS: !GetAtt MarketAutoNLB.DNSName
+        CortexRepNLBDNS: !GetAtt CortexRepNLB.DNSName
+        CortexProcNLBDNS: !GetAtt CortexProcNLB.DNSName
+        IntVPCR53Zone: !Ref IntVPCR53Zone
+        SOLRUrl: !Ref SOLRUrl
+        
+  # Sitecore Security Stack
+  SecurityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-sitecore-base/templates/sitecore-security.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        SitecoreS3Bucket: !Ref SitecoreS3Bucket
+        QSS3BucketName: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        LambdaZipsBucketName:
+          !If [
+            CreateLambdaZipsBucket,
+            !Ref LambdaZipsBucket,
+            !Ref LambdaZipsBucketName,
+          ]
+  # Create lambda functions
+  FunctionsStack:
+    Type: 'AWS::CloudFormation::Stack'
+    # DependsOn: 
+    #   - SecurityStack
+    Properties:
+      TemplateURL: !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-sitecore-base/templates/sitecore-functions.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        LambdaZipsBucketName:
+          !If [
+            CreateLambdaZipsBucket,
+            !Ref LambdaZipsBucket,
+            !Ref LambdaZipsBucketName,
+          ]
+        QSS3BucketName: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        CopyZipsRoleArn: !GetAtt SecurityStack.Outputs.CopyZipsRoleArn
+        ConvertCertsRoleArn: !GetAtt SecurityStack.Outputs.ConvertCertificatesLambdaRoleArn
+        DeleteResourcesRoleArn: !GetAtt SecurityStack.Outputs.DeleteResourcesLambdaRoleArn
+        SitecorePrefix: !Ref SitecorePrefix
+  # Sitecore ACM Stack
+  ACMStack:
+    Type: AWS::CloudFormation::Stack
+    Condition: CreateExternalCertificate
+    DependsOn:
+      - FunctionsStack
+    Properties:
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-sitecore-base/templates/sitecore-acm.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        DomainName: !Ref ExternalCertFQDN
+        HostedZoneID: !Ref ExternalR53ZoneID
+        LambdaZipsBucketName:
+          !If [
+            CreateLambdaZipsBucket,
+            !Ref LambdaZipsBucket,
+            !Ref LambdaZipsBucketName,
+          ]
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+  # Sitecore Parameter Store Stack
+  ParamStack:
+    Type: AWS::CloudFormation::Stack
+    # DependsOn: 
+    #   - LoadBalancerInternal
+    #   - FunctionsStack
+    Properties:
+      TemplateURL: !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-parameters.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+        SCPrefix: !Ref SitecorePrefix
+        SOLRCorePrefix: !Ref SOLRCorePrefix
+        SOLRUrl: !Ref SOLRUrl
+        EnvironmentType: !Ref EnvironmentType
+        SCLogLevel: !Ref SCLogLevel
+        SCS3Bucket: !Ref SitecoreS3Bucket
+        SCResourcesPrefix: !Ref SCResourcesPrefix
+        SCLicensePrefix: !Ref SCLicensePrefix
+        CDDNSName: !Ref CDDNSName
+        CMDNSName: !Ref CMDNSName
+        ISDNSName: !Ref ISDNSName
+        VPCPrivateDNS: !Ref VPCPrivateDNS
+        IntDNS:
+          !If [
+            InternalDNSName,
+            !Sub '${AWS::Region}.sitecore.internal',
+            !Ref IntDNS,
+          ]
+  # Builds RDS MSSQL Database and ElastiCache Redis
+  DBStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: 
+      # - SecurityStack
+      - ParamStack # RDSsqlSG
+    Properties:
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-sitecore-base/templates/sitecore-db.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        PrivateSubnet1AID: !Ref PrivateSubnet1A
+        PrivateSubnet2AID: !Ref PrivateSubnet2A
+        DBInstanceClass: !Ref DBInstanceClass
+        SQLEngineEdition: !Ref SQLEngineEdition
+        SQLEngineVersion: !Ref SQLEngineVersion
+        SQLAlwaysOn: !Ref SQLAlwaysOn
+        DBAutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
+        BackupRetentionPeriod: !Ref BackupRetentionPeriod
+        RDSSecurityGroup: !Ref RDSsqlSG
+        VolumeIops: !Ref VolumeIops
+        VolumeSize: !Ref VolumeSize
+        VolumeType: !Ref VolumeType
+        RDSMonitoringRole: !GetAtt SecurityStack.Outputs.RDSEnhancedMonitoringArn
+        SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+        RedisSecurityGroup: !Ref RedisSG
+        CacheNodeType: !Ref CacheNodeType
+        Engine: 'redis'
+        NumCacheNodes: '1'
+        RedisPort: !Ref RedisPort
+
+  # Sitecore AMI Build Stack
+  CustomAMIStack:
+    Type: AWS::CloudFormation::Stack
+    # DependsOn: 
+    #   - SecurityStack
+    #   - ParamStack
+    Properties:
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-ami.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        AutomationAssumeRole: !GetAtt SecurityStack.Outputs.SCAutomationRoleARN
+        ImageID: '/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base'
+        SitecoreKeyPair: !Ref SitecoreKeyPair
+        PrivateSubnet1A: !Ref PrivateSubnet1A
+        IamInstanceProfile: !GetAtt SecurityStack.Outputs.SCAMIInstanceProfileName
+        SecurityGroupIds: !Ref SitecoreInstanceSG
+        InstanceType: 't2.large'
+        LocalPath: !GetAtt ParamStack.Outputs.SCLocalResourcePath
+        LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath
+        RootStackName: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+        TargetAmiName: !GetAtt ParamStack.Outputs.CustomAmiName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        QSS3BucketName: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        QSS3BucketRegion: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+
+  # Custom Resource to convert and import Instance certificate, as it has the full certificate chain
+  CertConvertACM:
+    Type: AWS::CloudFormation::CustomResource
+    DependsOn:  
+      - CustomAMIStack 
+      # - SecurityStack
+      # - CertConvertACM
+    Properties:
+      ServiceToken: !GetAtt FunctionsStack.Outputs.ConvertCertificatesLambdaArn
+      S3BucketName: !Ref SitecoreS3Bucket
+      S3ObjectPrefix: !GetAtt ParamStack.Outputs.InstanceCertificateLocation
+      SecretLocation: !Join 
+        - ''
+        - - 'sitecore-quickstart-'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '-certpass'
+      AcmParameterPath: !Join 
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/cert/internal/acm'
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    # DependsOn:
+    #   - CertConvertACM
+    #   - FunctionsStack
+    Properties:
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-networking.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        LoadBalancerInternal: !Ref LoadBalancerInternal
+        InternalCertificateARN: !GetAtt CertConvertACM.InternalCertARN
+        LoadBalancerExternal: !Ref LoadBalancerExternal
+        ExternalCertificateARN: !If [CreateExternalCertificate, !GetAtt ACMStack.Outputs.ACMCertificate, !Ref ExternalCertificateARN]
+        XConnectNLB: !Ref XConnectNLB
+        CollectionNLB: !Ref CollectionNLB
+        RefDataNLB: !Ref RefDataNLB
+        MarketAutoRepNLB: !Ref MarketAutoRepNLB
+        MarketAutoNLB: !Ref MarketAutoNLB
+        CortexRepNLB: !Ref CortexRepNLB
+        CortexProcNLB: !Ref CortexProcNLB
+        VPCID: !Ref VPCID
+        IntDNS: !If [InternalDNSName, !Sub '${AWS::Region}.sitecore.internal', !Ref 'IntDNS']
+        SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+
+  # Sitecore SOLR Stack
+  SolrStack:
+    Type: AWS::CloudFormation::Stack
+    Condition: CreateDevSolr
+    DependsOn: 
+      - CustomAMIStack 
+      # - SecurityStack
+      # - ParamStack
+    Properties:
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-sitecore-base/templates/sitecore-solrdev.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        PrivateSubnet1A: !Ref PrivateSubnet1A
+        PrivateSubnet2A: !Ref PrivateSubnet2A
+        SolrInstanceType: !Ref CDInstanceType
+        SolrInstanceSG: !Ref SitecoreInstanceSG
+        SolrKeyPair: !Ref SitecoreKeyPair
+        SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+        LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath
+        R53HostedZoneID: !If [
+            CreateInternalR53,
+            !GetAtt R53Stack.Outputs.R53IntHostedID,
+            '',
+          ] # If VPCPrivateDNS is True, this will be '' and no record for solr will be created.
+        S3BucketName: !Ref SitecoreS3Bucket
+        QSS3BucketName: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        AutoscalingSNS: !Ref AutoscalingSNS
+        LoadBalancerInternalDNS: !GetAtt LoadBalancerInternal.DNSName
+        VPCID: !Ref VPCID
+        InternalCertificateARN: !GetAtt CertConvertACM.InternalCertARN
+        LoadBalancerInternal: !Ref LoadBalancerInternal
+
+  # The following 3 stacks are used to introduce an if statement into the depends of the Sitecore ALB Stack
+  # The dependency varies depending on the condition where SOLR is to be deployed or not.
+  SOLRWaitHandle:
+    Condition: CreateDevSolr
+    DependsOn: 
+      - SolrStack
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  SOLRDependencyCheck:
+    Type: AWS::CloudFormation::WaitCondition
+    Properties:
+      Handle: !If [CreateDevSolr, !Ref SOLRWaitHandle, !Ref WaitHandle]
+      Timeout: '1'
+      Count: 0
+
+  # Sitecore ALB Stack
+  RolesStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: 
+      - SOLRDependencyCheck
+    Properties:
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-roles.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        PrivateSubnet1A: !Ref PrivateSubnet1A
+        PrivateSubnet2A: !Ref PrivateSubnet2A
+        CDMinSize: !Ref CDMinSize
+        CDMaxSize: !Ref CDMaxSize
+        CDDesiredCapacity: !Ref CDDesiredCapacity
+        SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+        CDInstanceType: !Ref CDInstanceType
+        CDScalingMetric: !Ref CDScalingMetric
+        CDScalingMetricValue: !Ref CDScalingMetricValue
+        CMInstanceType: !Ref CmIdRdInstanceType
+        CMScalingMetric: !Ref CMScalingMetric
+        CMScalingMetricValue: !Ref CMScalingMetricValue
+        CollInstanceType: !Ref CollCSInstanceType
+        CollSearchInstanceType: !Ref CollCSInstanceType
+        CortexProcInstanceType: !Ref MaCpPrcInstanceType
+        CortexRepInstanceType: !Ref MarCrRepInstanceType
+        IdentityInstanceType: !Ref CmIdRdInstanceType
+        MarkAutoInstanceType: !Ref MaCpPrcInstanceType
+        MarkAutoRepInstanceType: !Ref MarCrRepInstanceType
+        ProcessingInstanceType: !Ref MaCpPrcInstanceType
+        RefDataInstanceType: !Ref CmIdRdInstanceType
+        ReportingInstanceType: !Ref MarCrRepInstanceType
+        SitecoreInstanceSG: !Ref SitecoreInstanceSG
+        SCInstanceProfile: !GetAtt SecurityStack.Outputs.SCInstanceProfileARN
+        SitecoreKeyPair: !Ref SitecoreKeyPair
+        CMMinSize: !Ref CMMinSize
+        CMMaxSize: !Ref CMMaxSize
+        CMDesiredCapacity: '1' # TODO udpate later
+        AutoscalingSNS: !Ref AutoscalingSNS
+        LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath
+        CDExtTargetGroup: !GetAtt NetworkStack.Outputs.CDTargetGroup
+        CMExtTargetGroup: !GetAtt NetworkStack.Outputs.CMTargetGroup
+        ISExtTargetGroup: !GetAtt NetworkStack.Outputs.ISTargetGroup
+        ColIntTargetGroup: !GetAtt NetworkStack.Outputs.CollectionTargetGroup
+        CSIntTargetGroup: !GetAtt NetworkStack.Outputs.ColSearchTargetGroup
+        CPIntTargetGroup: !GetAtt NetworkStack.Outputs.CortProcTargetGroup
+        CRIntTargetGroup: !GetAtt NetworkStack.Outputs.CortRepTargetGroup
+        MAIntTargetGroup: !GetAtt NetworkStack.Outputs.MarkAutoTargetGroup
+        MARIntTargetGroup: !GetAtt NetworkStack.Outputs.MarkAutoRepTargetGroup
+        PrcIntTargetGroup: !GetAtt NetworkStack.Outputs.ProcessingTargetGroup
+        RDIntTargetGroup: !GetAtt NetworkStack.Outputs.RefDataTargetGroup
+        RepIntTargetGroup: !GetAtt NetworkStack.Outputs.ReportingDataTargetGroup
+        InternalDNS: !If [InternalDNSName, !Sub '${AWS::Region}.sitecore.internal', !Ref IntDNS]
+Outputs:
+  InternalALBDNS:
+    Description: Internal DNS name of the ALB
+    Value: !GetAtt LoadBalancerInternal.DNSName
+  ExternalALBDNS:
+    Description: DNS name of the external facing ALB. This will be used for the Content Delivery, Content Management & Identity Server DNS CNAME's
+    Value: !GetAtt LoadBalancerExternal.DNSName
+  InternalXConnectDNS:
+    Description: Internal DNS name of the XConnect NLB
+    Value: !GetAtt XConnectNLB.DNSName
+  ContentDelivery:
+    Description: The website name for the Content Delivery role. A CNAME entry needs to be added pointing to the 'ExternalALBDNS'
+    Value: !Ref CDDNSName
+  ContentManagement:
+    Description: The website name for the Content Management role. A CNAME entry needs to be added pointing to the 'ExternalALBDNS'
+    Value: !Ref CMDNSName
+  IdentityServer:
+    Description: The website name for the Identity Server role. A CNAME entry needs to be added pointing to the 'ExternalALBDNS'
+    Value: !Ref ISDNSName
+  SolrURL:
+    Description: The Solr URL configured for the Sitecore deployment
+    Value: !GetAtt ParamStack.Outputs.SolrURL
+  SQLEndpoint:
+    Description: RDS SQL Database endpoint
+    Value: !GetAtt DBStack.Outputs.RDSSQLEndpoint
+  RedisEndpoint:
+    Description: The Redis primary endpoint location for the Content Delivery role
+    Value: !GetAtt DBStack.Outputs.CDRedisEndpoint
+  SitecoreQuickStartPrefix:
+    Description: The prefix used for resources created by the Quick Start
+    Value: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+  InternalR53Zone:
+    Description: The HostedZone ID of the R53 
+    Value: !If [CreateInternalR53, !GetAtt R53Stack.Outputs.R53IntHostedID, 'Private VPC DNS selected. Please create internal DNS entries for Sitecore. See Deployment Guide for more details.']
+  InternalDNSFQDN:
+    Description: The internal VPC FQDN for the Sitecore deployment 
+    Value: !If [CreateInternalR53, !GetAtt R53Stack.Outputs.InternalDNSFQDN, !Ref IntDNS]
+  LoadBalancerProcRep:
+    Description: The loadbalancer endpoint for the Processing and Reporting DNS CNames.
+    Value: !GetAtt LoadBalancerInternal.DNSName
+  LoadBalancerCollSearch:
+    Description: The loadbalancer endpoint for the CollectionSearch DNS CName.
+    Value: !GetAtt XConnectNLB.DNSName
+  LoadBalancerColl:
+    Description: The loadbalancer endpoint for the Collection DNS CName.
+    Value: !GetAtt CollectionNLB.DNSName
+  LoadBalancerRefData:
+    Description: The loadbalancer endpoint for the ReferenceData DNS CName.
+    Value: !GetAtt RefDataNLB.DNSName
+  LoadBalancerMarketAutoRep:
+    Description: The loadbalancer endpoint for the MarketingAutomationReporting DNS CName.
+    Value: !GetAtt MarketAutoRepNLB.DNSName
+  LoadBalancerMarketAuto:
+    Description: The loadbalancer endpoint for the MarketingAutomation DNS CName.
+    Value: !GetAtt MarketAutoNLB.DNSName
+  LoadBalancerCortexRep:
+    Description: The loadbalancer endpoint for the CortexReporting DNS CName.
+    Value: !GetAtt CortexRepNLB.DNSName
+  LoadBalancerCortexProc:
+    Description: The loadbalancer endpoint for the CortexProcessing DNS CName.
+    Value: !GetAtt CortexProcNLB.DNSName
+  Postdeployment:
+    Description: See the deployment guide for postdeployment steps.
+    Value: https://fwd.aws/P6dEp?
