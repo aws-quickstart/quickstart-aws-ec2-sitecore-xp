@@ -70,4 +70,4 @@ tests:
       CDDNSName: override
       CMDNSName: override
       ISDNSName: override
-      EmailNotifications: override
+      EmailNotifications: user@example.com
