@@ -64,7 +64,7 @@ tests:
     parameters: 
       KeyPairName: "$[taskcat_getkeypair]"
       SitecoreKeyPair: "$[taskcat_getkeypair]"
-      ExternalCertificateARN: override
+      ExternalCertificateARN: ''
       ExternalCertFQDN: ''
       ExternalR53ZoneID: ''
       CDDNSName: override
