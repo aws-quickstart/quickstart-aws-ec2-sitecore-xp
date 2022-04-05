@@ -1,6 +1,3 @@
-[submodule "submodules/quickstart-aws-sitecore-base"]
-	path = submodules/quickstart-aws-sitecore-base
-	url = git@github.com:aws-quickstart/quickstart-aws-sitecore-base.git
 [submodule "submodules/quickstart-aws-vpc"]
 	path = submodules/quickstart-aws-vpc
 	url = git@github.com:aws-quickstart/quickstart-aws-vpc.git
