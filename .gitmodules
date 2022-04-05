@@ -7,3 +7,6 @@
 [submodule "submodules/quickstart-microsoft-utilities"]
 	path = submodules/quickstart-microsoft-utilities
 	url = git@github.com:aws-quickstart/quickstart-microsoft-utilities.git
+[submodule "submodules/quickstart-aws-sitecore-base"]
+	path = submodules/quickstart-aws-sitecore-base
+	url = git@github.com:aws-quickstart/quickstart-aws-sitecore-base.git
