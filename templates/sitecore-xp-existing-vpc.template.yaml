@@ -225,7 +225,7 @@ Parameters:
   # Sitecore Networking Configuration
   CDDNSName:
     Type: String
-    Description: 'Fully qualified domain name (FQDN) for the content delivery role (e.g., home.example.com).'
+    Description: Fully qualified domain name (FQDN) for the content delivery role (e.g., home.example.com).
   CMDNSName:
     Type: String
     Description: FQDN for the content management role.
@@ -235,11 +235,11 @@ Parameters:
   IntDNS:
     Type: String
     Default: ''
-    Description: (Optional) Internal DNS name. If left blank, a DNS name is generated for you. If you have a private Route 53 hosted zone or a private managed DNS connected to your VPC, provide the DNS suffix of the hosted zone.
+    Description: (Optional) Internal DNS name. If left blank, a DNS name is generated for you. If you have a private Route 53 hosted zone or a private managed DNS connected to your VPC, enter the DNS suffix of the hosted zone.
   IntVPCR53Zone:
     Type: String
     Default: ''
-    Description: (Optional) If you already have a private Route 53 hosted zone connected to your VPC, provide the Route 53 hosted zone ID.
+    Description: (Optional) If you already have a private Route 53 hosted zone connected to your VPC, enter the Route 53 hosted zone ID.
   VPCPrivateDNS:
     Type: String
     AllowedValues:
@@ -249,10 +249,10 @@ Parameters:
     Description: Set to true if you have your own DNS servers for your VPC. If true, you must create Canonical Name Record (CNAME) records for the Sitecore roles. Set to false if you have a private Route 53 hosted zone connected to your VPC. For more information, refer to the deployment guide.  
   ExternalCertificateARN:
     Type: String
-    Description: (Optional) Provide the Amazon Resource Name (ARN) of the wildcard certificate created in AWS Certificate Manager (ACM). If left blank, a wildcard certificate will be created for you. If you provide an ARN, you do not need to provide details for ExternalCertFQDN or ExternalRoute53ZoneID.
+    Description: (Optional) Provide the Amazon Resource Name (ARN) of the wildcard certificate created in AWS Certificate Manager (ACM). If left blank, the deployment creates a wildcard certificate. If you enter an ARN, you do not need to enter ExternalCertFQDN or ExternalRoute53ZoneID parameters.
   ExternalCertFQDN: 
     Type: String
-    Description: (Optional) External domain name for the Sitecore deployment (e.g., example.com). IF ExternalCertificateARN is left blank, this is created in ACM as a wildcard certificate (e.g., *.example.com).
+    Description: (Optional) External domain name for the Sitecore deployment (e.g., example.com). If ExternalCertificateARN is left blank, this is created in ACM as a wildcard certificate (e.g., *.example.com).
   ExternalR53ZoneID: 
     Type: String
     Description: (Optional) If you require certificate validation using DNS, provide the Route S3-hosted zone ID for ExternalCertFQDN. If no Route 53 hosted zone ID is provided, validation is done using email.
@@ -482,7 +482,7 @@ Parameters:
     AllowedPattern: ^[a-zA-Z0-9]*
   SitecoreS3Bucket:
     Type: String
-    Description: Name of the S3 bucket where Sitecore 9.3 resources, such as installation and license files, are located. This deployment puts objects into this bucket.
+    Description: Name of the S3 bucket for Sitecore 9.3 resources such as installation and license files.
   SCResourcesPrefix:
     Type: String
     Description: Prefix in the S3 bucket for the Sitecore install files (e.g., resources/).
@@ -493,11 +493,11 @@ Parameters:
     Default: license/
   SOLRUrl:
     Type: String
-    Description: (Optional) URL of your Solr server/cluster. If no URL is provided, a development Solr instance is created. The development Solr instance should not be used in a production environment.
+    Description: (Optional) URL of your Solr server/cluster. If left blank, a development Solr instance is created. The development Solr instance should not be used in a production environment.
     Default: ''
   SOLRCorePrefix:
     Type: String
-    Description: If you provided a Solr URL (SOLRUrl), enter the prefix of your preconfigured Solr cores. If a Solr URL is not provided, the prefix you enter is used for Solr cores on the development Solr instance.
+    Description: If you provided a Solr URL (SOLRUrl), enter the prefix of your preconfigured Solr cores. If left blank, the prefix you enter is used for Solr cores on the development Solr instance.
   EnvironmentType:
     Description: Type of Sitecore deployment.
     AllowedValues:
@@ -519,7 +519,7 @@ Parameters:
     Description: Email address for receiving Sitecore scaling notifications.
     Type: String
   LambdaZipsBucketName:
-    Description: (Optional) Name of the S3 bucket for Lambda zip files. If you leave this parameter blank, an S3 bucket is created.
+    Description: (Optional) Name of the S3 bucket for Lambda zip files. If left blank, the deployment creates an S3 bucket.
     Type: String
     Default: ''
   # RDS MS SQL
@@ -582,17 +582,16 @@ Parameters:
     AllowedValues:
       - 'False'
       - 'True'
-    Description: "(Optional) Set to true to enable SQL Server Always On availability groups. This only applies when the MSSQL database engine edition (SQLEngineEdition) is set to sqlserver-ee (Enterprise Edition). If set to false, SQL will be deployed to one Availability Zone."
+    Description: (Optional) Choose true to enable SQL Server Always On availability groups. This parameter only applies if you choose sqlserver-ee (Enterprise Edition) for the MSSQL database engine edition (SQLEngineEdition) parameter. Choose false to deploy SQL Server to one Availability Zone only.
     Type: String
   BackupRetentionPeriod:
     Default: 7
-    Description: Number of days automated backups are retained. Setting this parameter to a positive number enables backups. 
+    Description: Number of days automated backups are retained. Enter a positive number to enable backups. 
       Setting this parameter to 0 disables automated backups. 
     Type: Number
   VolumeIops:
     Default: 1000
-    Description: Provisioned IOPS for the SQL Data, Logs and TempDb volumes. This
-      parameter is only applicable when VolumeType is set to io1.
+    Description: Provisioned IOPS for the SQL Data, Logs and TempDb volumes. This parameter only applies if you choose io1 for the Volume type (VolumeType) parameter.
     MaxValue: '20000'
     MinValue: '100'
     Type: Number
@@ -607,11 +606,11 @@ Parameters:
       - gp2
       - io1
     Default: gp2
-    Description: Volume type for the SQL Data, Logs and TempDb volumes
+    Description: Volume type for the SQL Data, Logs and TempDb volumes.
     Type: String
   # Redis Configuration
   CacheNodeType:
-    Description: Cache nodes instance type.
+    Description: EC2 instance type for cache nodes.
     Type: String
     Default: cache.m4.large
     AllowedValues:
@@ -628,7 +627,7 @@ Parameters:
       - cache.r4.4xlarge
       - cache.r4.8xlarge
   RedisPort:
-    Description: Port number to be used for ElastiCache for Redis.
+    Description: ElastiCache for Redis port number.
     Type: Number
     Default: 6379
   # Quick Start Confguration
