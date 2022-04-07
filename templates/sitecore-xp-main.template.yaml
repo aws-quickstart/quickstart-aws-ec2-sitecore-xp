@@ -649,13 +649,10 @@ Parameters:
     Type: String
   SQLEngineVersion:
     AllowedValues:
+      - 14.00.3401.7.v1
       - 14.00.3381.3.v1
-      - 14.00.3223.3.v1
-      - 14.00.3192.2.v1
-      - 14.00.3049.1.v1
-      - 14.00.3035.2.v1
-      - 14.00.3015.40.v1
-      - 14.00.1000.169.v1
+      - 14.00.3356.20.v1
+      - 14.00.3294.2.v1
     ConstraintDescription: Must select a MSSQL database engine version.
     Default: 14.00.3381.3.v1
     Description: MSSQL database engine version.
