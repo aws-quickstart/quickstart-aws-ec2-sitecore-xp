@@ -23,7 +23,7 @@ Metadata:
           - PublicSubnet1
           - PublicSubnet2
       - Label:
-          default: Sitecore Networking Configuration
+          default: Sitecore networking configuration
         Parameters:
           - CDDNSName
           - CMDNSName
@@ -35,7 +35,7 @@ Metadata:
           - ExternalCertFQDN
           - ExternalR53ZoneID
       - Label:
-          default: Sitecore Configuration
+          default: Sitecore configuration
         Parameters:
           - CDMinSize
           - CDMaxSize
@@ -75,7 +75,7 @@ Metadata:
           - VolumeIops
           - BackupRetentionPeriod
       - Label:
-          default: Redis ElastiCache configuration
+          default: ElastiCache for Redis configuration
         Parameters:
           - CacheNodeType
           - RedisPort
@@ -493,7 +493,7 @@ Parameters:
     Default: license/
   SOLRUrl:
     Type: String
-    Description: (Optional) URL of your Solr server/cluster. If left blank, a development Solr instance is created. The development Solr instance should not be used in a production environment.
+    Description: (Optional) URL of your Solr server/cluster. If left blank, a development Solr instance is created. Do not use the development Solr instance in a production environment.
     Default: ''
   SOLRCorePrefix:
     Type: String
@@ -586,8 +586,7 @@ Parameters:
     Type: String
   BackupRetentionPeriod:
     Default: 7
-    Description: Number of days automated backups are retained. Enter a positive number to enable backups. 
-      Setting this parameter to 0 disables automated backups. 
+    Description: Number of days automated backups are retained. Enter a positive number to enable backups. Enter 0 to disable automated backups.
     Type: Number
   VolumeIops:
     Default: 1000
