@@ -324,7 +324,7 @@ Parameters:
     Description: (Optional) Internal DNS name. If left blank, one is generated for you.
   ExternalCertificateARN:
     Type: String
-    Description: "(Optional) The Amazon Resource Name (ARN) of the wildcard certificate created in ACM. If not provided, a wildcard certificate will be created for you. If you provide an ARN, you do not need to provide details for ExternalCertFQDN or ExternalRoute53ZoneID."
+    Description: (Optional) The Amazon Resource Name (ARN) of the wildcard certificate created in ACM. If not provided, a wildcard certificate will be created for you. If you provide an ARN, you do not need to enter ExternalCertFQDN or ExternalRoute53ZoneID parameters.
   ExternalCertFQDN: 
     Type: String
     Description: (Optional) External domain name for the Sitecore deployment (e.g., example.com). This is created in ACM as a wildcard certificate (e.g., *.example.com) if no value is provided for ExternalCertificateARN.
