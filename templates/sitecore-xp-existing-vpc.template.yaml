@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: 'Deploys Sitecore into an existing VPC  (qs-1qppe684j)'
 Metadata:
   QuickStartDocumentation:
-    EntrypointName: "Launch into an existing VPC"
+    EntrypointName: "Deploy into an existing VPC"
     OptionalParameters:
       - IntDNS
       - IntVPCR53Zone
@@ -249,13 +249,13 @@ Parameters:
     Description: Set to true if you have your own DNS servers for your VPC. If true, you must create Canonical Name Record (CNAME) records for the Sitecore roles. Set to false if you have a private Route 53 hosted zone connected to your VPC. For more information, refer to the deployment guide.  
   ExternalCertificateARN:
     Type: String
-    Description: (Optional) Provide the Amazon Resource Name (ARN) of the wildcard certificate created in AWS Certificate Manager (ACM). If left blank, the deployment creates a wildcard certificate. If you enter an ARN, you do not need to enter ExternalCertFQDN or ExternalRoute53ZoneID parameters.
+    Description: (Optional) The Amazon Resource Name (ARN) of the wildcard certificate created in AWS Certificate Manager (ACM). If left blank, the deployment creates a wildcard certificate. If you enter an ARN, you do not need to enter ExternalCertFQDN or ExternalRoute53ZoneID parameters.
   ExternalCertFQDN: 
     Type: String
     Description: (Optional) External domain name for the Sitecore deployment (e.g., example.com). If ExternalCertificateARN is left blank, this is created in ACM as a wildcard certificate (e.g., *.example.com).
   ExternalR53ZoneID: 
     Type: String
-    Description: (Optional) If you require certificate validation using DNS, provide the Route S3-hosted zone ID for ExternalCertFQDN. If no Route 53 hosted zone ID is provided, validation is done using email.
+    Description: (Optional) Enter a Route 53 Hosted Zone ID for ExternalCertFQDN if you require CNS certificate validation. If no Route 53 hosted zone ID is provided, validation is done using email.
   #Sitecore Configuration
   CDMinSize:
     Type: String
@@ -485,7 +485,7 @@ Parameters:
     Description: Name of the S3 bucket for Sitecore 9.3 resources such as installation and license files.
   SCResourcesPrefix:
     Type: String
-    Description: Prefix in the S3 bucket for the Sitecore install files (e.g., resources/).
+    Description: Prefix in the S3 bucket for  Sitecore installation files (e.g., resources/).
     Default: resources/
   SCLicensePrefix:
     Type: String
@@ -497,7 +497,7 @@ Parameters:
     Default: ''
   SOLRCorePrefix:
     Type: String
-    Description: If you provided a Solr URL (SOLRUrl), enter the prefix of your preconfigured Solr cores. If left blank, the prefix you enter is used for Solr cores on the development Solr instance.
+    Description: If you provide a Solr URL (SOLRUrl), enter the prefix of your preconfigured Solr cores. If left blank, the prefix you enter is used for Solr cores on the development Solr instance.
   EnvironmentType:
     Description: Type of Sitecore deployment.
     AllowedValues:
