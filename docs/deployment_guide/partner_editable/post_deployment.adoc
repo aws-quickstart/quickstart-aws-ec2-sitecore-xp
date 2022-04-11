@@ -1,17 +1,15 @@
 //Include any post-deployment steps here, such as steps necessary to test that the deployment was successful. If there are no post-deployment steps leave this file empty.
 
-== Post Deployment
-=== Create DNS Entries
-Once the Quick Start deployment completes successfully, create DNS entries in your
-internet-facing DNS for the content delivery, content management, and identity servers.
-These CNAME entries correspond to the names provided in the initial parameters for the
-deployment and point to the listed `ExternalALBDNS` value in the outputs for `SitecoreStack`.
+== Postdeployment steps
+=== Create DNS entries
+After deploying the Quick Start, add DNS CNAME records to your internet-facing DNS for the Sitecore content delivery, content management, and identity servers.
+These records correspond to the `CDDNSName`, `CMDNSName`, and `ISDNSName` deployment parameters. They point to the DNS name of the external facing ALB (`ExternalALBDNS` in the `SitecoreStack` deployment outputs).
 
-If you deploy this Quick Start into an existing VPC using your self-managed DNS, you must
+If you deploy this Quick Start into an existing VPC using a self-managed DNS, you must
 create DNS CNAME entries for the Sitecore roles. The required CNAME host name and
 corresponding load balancer DNS can be found in the outputs of `RolesStack` and `SitecoreStack`,
 respectively. When it’s updated, log in to the instance that hosts the marketing automation
-role, and start the Sitecore marketing automation windows service.
+role, and start the Sitecore marketing automation Windows service.
 
 === Test the deployment
 Use a web browser to find the DNS name you provided for the content delivery role.
@@ -56,8 +54,8 @@ a new instance.
 ==== Parameter Store
 All Sitecore role installations are done via the Sitecore Installation Framework (SIF). Using
 SIF allows parameters to be passed to the Sitecore role installation when the instance starts
-for the first time. All of these parameters are stored within AWS Systems Manager
-Parameter Store. If any of the values within Parameter Store are updated, the instances can
+for the first time. These parameters are stored in AWS Systems Manager
+Parameter Store. If any of these parameter values in Parameter Store are updated, the instances can
 be deleted so that when the instance starts up, the Sitecore installation uses the updated
 parameter values. For example, this could be used to update the Solr URL or Solr Core
 prefix for the Sitecore roles.

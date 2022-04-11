@@ -37,8 +37,7 @@ database.
 
 *Q.* How do I update SSL certificates when they expire?
 
-*A.* Please see the <<_other_useful_information,Other useful information>> section for guidance about updating internal
-Sitecore certificates.
+*A.* Refer to the <<_other_useful_information,Other useful information>> section of this guide.
 
 *Q.* Where are the deployment logs?
 
