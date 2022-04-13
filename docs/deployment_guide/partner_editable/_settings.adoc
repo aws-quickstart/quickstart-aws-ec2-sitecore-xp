@@ -3,11 +3,11 @@
 :partner-product-name: Sitecore XP
 :partner-product-short-name: Sitecore
 //:partner-company-name: Sitecore
-:doc-month: January
+:doc-month: April
 :doc-year: 2022
 //:partner-contributors: John Smith, {partner-company-name}
 //:other-contributors: Akua Mansa, Trek10
-:aws-contributors: Tony Bulding, Sasidhar Reddy Bhumireddy, Borja Prado, AWS Quick Start team
+:aws-contributors: Tony Bulding, Sasidhar Reddy Bhumireddy, Borja Prado, AWS Integration & Automation team
 //:aws-ia-contributors: Toni Jones, AWS Integration & Automation team
 :deployment_time: 1–1.5 hours
 :default_deployment_region: us-east-1
