@@ -5,7 +5,7 @@ This Quick Start requires that you https://dev.sitecore.net/[sign up with Siteco
 
 . Obtain a https://www.sitecore.com/knowledge-center/getting-started/developer-trial[temporary Sitecore license] or contact your Sitecore sales representative or
 Sitecore partner for a full Sitecore license.
-. Upload the license file to an S3 bucket into a prefix called “license.”
+. Upload the license file to an S3 bucket into a prefix called `license`.
 . https://dev.sitecore.net/Downloads/Sitecore_Experience_Platform/[Download the Sitecore XP1 scaled installation files.]
 . Extract the contents of the .zip file, but don’t extract any of the resulting .zip files. Using the same S3 bucket as the license file, upload these extracted files into a prefix called
 `resources`.
