@@ -159,7 +159,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: !Ref CDDesiredCapacity
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -168,7 +168,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref ContentDeliveryLC
       MaxSize: !Ref CDMaxSize
@@ -236,7 +236,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: !Ref CMDesiredCapacity
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -245,7 +245,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref ContentManagementLC
       MaxSize: !Ref CMMaxSize
@@ -311,7 +311,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -320,7 +320,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref CollectionLC
       MaxSize: '2'
@@ -385,7 +385,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -394,7 +394,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref CollectionSearchLC
       MaxSize: '2'
@@ -459,7 +459,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -468,7 +468,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref CortexProcessingLC
       MaxSize: '2'
@@ -533,7 +533,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -542,7 +542,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref CortexReportingLC
       MaxSize: '2'
@@ -607,7 +607,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -616,7 +616,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref IdentityLC
       MaxSize: '2'
@@ -683,7 +683,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -692,7 +692,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref MarketingAutomationLC
       MaxSize: '2'
@@ -758,7 +758,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -767,7 +767,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref MarketingAutoRepLC
       MaxSize: '2'
@@ -832,7 +832,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -841,7 +841,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref ProcessingLC
       MaxSize: '2'
@@ -906,7 +906,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -915,7 +915,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref ReferenceDataLC
       MaxSize: '2'
@@ -980,7 +980,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -989,7 +989,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT15M
+        PauseTime: PT20M
     Properties:
       LaunchConfigurationName: !Ref ReportingLC
       MaxSize: '2'
