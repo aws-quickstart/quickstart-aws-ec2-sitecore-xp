@@ -385,7 +385,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT20M
+        Timeout: PT30M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -394,7 +394,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT20M
+        PauseTime: PT30M
     Properties:
       LaunchConfigurationName: !Ref CollectionSearchLC
       MaxSize: '2'
@@ -459,7 +459,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT20M
+        Timeout: PT30M
         Count: 1
     UpdatePolicy:
       AutoScalingScheduledAction:
@@ -468,7 +468,7 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
         WaitOnResourceSignals: true
-        PauseTime: PT20M
+        PauseTime: PT30M
     Properties:
       LaunchConfigurationName: !Ref CortexProcessingLC
       MaxSize: '2'
