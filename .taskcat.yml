@@ -57,17 +57,17 @@ project:
     QSS3BucketRegion: "$[taskcat_current_region]"
     QSS3KeyPrefix: quickstart-aws-ec2-sitecore-xp/
 tests:
-  master:
+  main:
     template: ./templates/sitecore-xp-main.template.yaml
     regions: 
       - us-east-1
     parameters: 
       KeyPairName: "$[taskcat_getkeypair]"
       SitecoreKeyPair: "$[taskcat_getkeypair]"
-      ExternalCertificateARN: override
+      ExternalCertificateARN: ''
       ExternalCertFQDN: ''
       ExternalR53ZoneID: ''
       CDDNSName: override
       CMDNSName: override
       ISDNSName: override
-      EmailNotifications: override
+      EmailNotifications: user@example.com
