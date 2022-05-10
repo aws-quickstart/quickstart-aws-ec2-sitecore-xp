@@ -9,12 +9,12 @@ AWS Cloud.
 [#architecture1]
 .Quick Start architecture for {partner-product-name} on AWS
 [link=deployment_guide/images/architecture_diagram.png]
-image::../docs/deployment_guide/images/architecture_diagram.png[Architecture,width=1227,height=851]
+image::../deployment_guide/images/architecture_diagram.png[Architecture,width=1227,height=851]
 
 [#architecture2]
 .Quick Start architecture of resources for {partner-product-name} on AWS
 [link=deployment_guide/images/architecture_diagram_2.png]
-image::../docs/deployment_guide/images/architecture_diagram_2.png[Architecture,width=967,height=1201]
+image::../deployment_guide/images/architecture_diagram_2.png[Architecture,width=967,height=1201]
 
 As shown in figures 1 and 2, the Quick Start sets up the following:
 
@@ -25,19 +25,19 @@ The Quick Start sets up the following:
 * In the public subnets:
 ** Managed network address translation (NAT) gateways to allow outbound internet access for resources in the private subnets.*
 ** Microsoft Remote Desktop Gateway (RD Gateway) instances in an Auto Scaling group. This provides inbound remote desktop access to Amazon Elastic Compute Cloud (Amazon EC2) instances in the public and private subnets.*
-* An internal ALB to route traffic to Sitecore reporting and processing instances.
-* An external Application Load Balancer (ALB) for routing traffic to Sitecore content and identity role instances.
-* Network Load Balancers (NLBs) for Transport Layer Security (TLS) pass-through to the remaining Sitecore instances.
+* An internal Application Load Balancer to route traffic to Sitecore reporting and processing instances.
+* An external Application Load Balancer for routing traffic to Sitecore content and identity role instances.
+* Network Load Balancers for Transport Layer Security (TLS) pass-through to the remaining Sitecore instances.
 * In the private subnets:
 ** Sitecore roles deployed on Amazon EC2 instances. Each role is deployed to one EC2 instance, and each instance is deployed to an Auto Scaling group.
 ** Amazon RDS SQL Server instances.
 ** Amazon ElastiCache for Redis for cache management.
 * An EC2 Amazon Machine Image (AMI) for the initial deployment of Sitecore roles and subsequent Auto Scaling events.
 * AWS Systems Manager to store parameter data and the AMI automation build document.
-* An Amazon Simple Storage Service (Amazon S3) artifacts bucket for storing static data.
+* An Amazon Simple Storage Service (Amazon S3) bucket for storing static data.
 * Amazon CloudWatch for monitoring deployed services.
 * AWS Secrets Manager and AWS Certificate Manager (ACM) for access control.
-* A Lambda function to convert and import the certificate into ACM.
+* A Lambda function to convert and import the Sitecore client certificate into ACM.
 * An Amazon Route 53 private hosted zone for internal Domain Name System (DNS) lookups within the VPC.
 
 [.small]#* The template that deploys the Quick Start into an existing VPC skips the components marked by asterisks and prompts you for your existing VPC configuration.#
