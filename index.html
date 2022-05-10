@@ -927,13 +927,13 @@ AWS Cloud.</p>
 </div>
 <div id="architecture1" class="imageblock">
 <div class="content">
-<a class="image" href="deployment_guide/images/architecture_diagram.png"><img src="docs/deployment_guide/images/architecture_diagram.png" alt="Architecture" width="1227" height="851"></a>
+<a class="image" href="deployment_guide/images/architecture_diagram.png"><img src="deployment_guide/images/architecture_diagram.png" alt="Architecture" width="1227" height="851"></a>
 </div>
 <div class="title">Figure 1. Quick Start architecture for Sitecore XP on AWS</div>
 </div>
 <div id="architecture2" class="imageblock">
 <div class="content">
-<a class="image" href="deployment_guide/images/architecture_diagram_2.png"><img src="docs/deployment_guide/images/architecture_diagram_2.png" alt="Architecture" width="967" height="1201"></a>
+<a class="image" href="deployment_guide/images/architecture_diagram_2.png"><img src="deployment_guide/images/architecture_diagram_2.png" alt="Architecture" width="967" height="1201"></a>
 </div>
 <div class="title">Figure 2. Quick Start architecture of resources for Sitecore XP on AWS</div>
 </div>
@@ -965,13 +965,13 @@ AWS Cloud.</p>
 </div>
 </li>
 <li>
-<p>An internal ALB to route traffic to Sitecore reporting and processing instances.</p>
+<p>An internal Application Load Balancer to route traffic to Sitecore reporting and processing instances.</p>
 </li>
 <li>
-<p>An external Application Load Balancer (ALB) for routing traffic to Sitecore content and identity role instances.</p>
+<p>An external Application Load Balancer for routing traffic to Sitecore content and identity role instances.</p>
 </li>
 <li>
-<p>Network Load Balancers (NLBs) for Transport Layer Security (TLS) pass-through to the remaining Sitecore instances.</p>
+<p>Network Load Balancers for Transport Layer Security (TLS) pass-through to the remaining Sitecore instances.</p>
 </li>
 <li>
 <p>In the private subnets:</p>
@@ -996,7 +996,7 @@ AWS Cloud.</p>
 <p>AWS Systems Manager to store parameter data and the AMI automation build document.</p>
 </li>
 <li>
-<p>An Amazon Simple Storage Service (Amazon S3) artifacts bucket for storing static data.</p>
+<p>An Amazon Simple Storage Service (Amazon S3) bucket for storing static data.</p>
 </li>
 <li>
 <p>Amazon CloudWatch for monitoring deployed services.</p>
@@ -1005,7 +1005,7 @@ AWS Cloud.</p>
 <p>AWS Secrets Manager and AWS Certificate Manager (ACM) for access control.</p>
 </li>
 <li>
-<p>A Lambda function to convert and import the certificate into ACM.</p>
+<p>A Lambda function to convert and import the Sitecore client certificate into ACM.</p>
 </li>
 <li>
 <p>An Amazon Route 53 private hosted zone for internal Domain Name System (DNS) lookups within the VPC.</p>
@@ -1375,7 +1375,7 @@ existing license by uploading a new Sitecore license into the S3 bucket and pref
 </html>
 <!--
 repo commit:
-cf0c016795d4946ca3655158aaac44c805ebfca6
+de8d1ad483cb0977eb234afdcb5ee7e65c0322b0
 
 submodule config:
  b9d58fc1b776dea5d72be403d03fc04af2a5c025 docs/boilerplate (b9d58fc)
