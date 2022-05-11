@@ -8,4 +8,4 @@ information, see the <<_pre_deployment_steps,Pre deployment steps>> section.
 
 If you don’t have a license, the Quick Start deployment will not complete successfully.
 
-There is no cost to use this Quick Start, however you will be billed for the resources deployed. For more information see the http://general-content-file[AWS Quick Start General Content Guide].
+There is no cost to use this Quick Start, however you will be billed for the resources deployed. For more information see the http://general-content-file[AWS Quick Start General Information Guide].
