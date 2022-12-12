@@ -2,10 +2,10 @@
 
 == Postdeployment steps
 === Create DNS entries
-After deploying the Quick Start, add DNS CNAME records to your internet-facing DNS for the Sitecore content delivery, content management, and identity servers.
+After deploying the Partner Solution, add DNS CNAME records to your internet-facing DNS for the Sitecore content delivery, content management, and identity servers.
 These records correspond to the `CDDNSName`, `CMDNSName`, and `ISDNSName` deployment parameters. They point to the DNS name of the external facing ALB (`ExternalALBDNS` in the `SitecoreStack` deployment outputs).
 
-If you deploy this Quick Start into an existing VPC using a self-managed DNS, you must
+If you deploy this Partner Solution into an existing VPC using a self-managed DNS, you must
 create DNS CNAME entries for the Sitecore roles. The required CNAME host name and
 corresponding load balancer DNS can be found in the outputs of `RolesStack` and `SitecoreStack`,
 respectively. When it’s updated, log in to the instance that hosts the marketing automation
@@ -15,7 +15,7 @@ role, and start the Sitecore marketing automation Windows service.
 Use a web browser to find the DNS name you provided for the content delivery role.
 
 To log in to Sitecore, retrieve the administrator password by opening AWS Secrets Manager
-from within the Region where you deployed this Quick Start. Search for “sitecoreadmin” to
+from within the Region where you deployed this Partner Solution. Search for “sitecoreadmin” to
 find the password value.
 
 When you have the password, use a web browser to find the DNS name for either the
@@ -29,9 +29,9 @@ environment.
 Use AWS CloudFormation for ongoing management.
 
 We recommend using the AWS CloudFormation console to manage updates and deletions
-for the resources that this Quick Start creates. Use the Amazon EC2 console, AWS
+for the resources that this Partner Solution creates. Use the Amazon EC2 console, AWS
 command line interface (CLI), or application programming interface (API) to change or
-delete resources created by this Quick Start. Otherwise, future AWS CloudFormation
+delete resources created by this Partner Solution. Otherwise, future AWS CloudFormation
 operations on the stack may behave unexpectedly.
 
 All Sitecore instances are in the private subnet, so there is no access to them from the
@@ -43,7 +43,7 @@ deployed load balancers.
 //Provide any other information of interest to users, especially focusing on areas where AWS or cloud usage differs from on-premises usage.
 
 ==== Personalized content on Sitecore roles
-Once the deployment of the Sitecore Quick Start is complete, you have a default installation
+Once the deployment of the Sitecore Partner Solution is complete, you have a default installation
 of Sitecore XP in your AWS account. Your custom Sitecore site must then be deployed to
 the Sitecore roles. Any media for your site (for example, pictures and videos) should be
 stored within an S3 bucket and referenced within the website’s code. Storing local media

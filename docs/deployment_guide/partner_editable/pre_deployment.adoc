@@ -1,7 +1,7 @@
 //Include any pre-deployment steps here, such as signing up for a Marketplace AMI or making any changes to a Partner account. If there are none leave this file empty.
 
 == Predeployment steps
-This Quick Start requires that you https://dev.sitecore.net/[sign up with Sitecore] to obtain the Sitecore XP resource files.
+This Partner Solution requires that you https://dev.sitecore.net/[sign up with Sitecore] to obtain the Sitecore XP resource files.
 
 . Obtain a https://www.sitecore.com/knowledge-center/getting-started/developer-trial[temporary Sitecore license] or contact your Sitecore sales representative or
 Sitecore partner for a full Sitecore license.
@@ -10,10 +10,10 @@ Sitecore partner for a full Sitecore license.
 . Extract the contents of the .zip file, but don’t extract any of the resulting .zip files. Using the same S3 bucket as the license file, upload these extracted files into a prefix called
 `resources`.
 . Create a certificate in Amazon Certificate Manager (ACM) for your Sitecore deployment
-in the Region where you deploy the Quick Start. This certificate must be created as a
+in the Region where you deploy the Partner Solution. This certificate must be created as a
 wildcard certificate for your Sitecore domain (for example, `*.example.com`).
 
-This Quick Start can optionally deploy a server for Apache Solr search. This Solr
+This Partner Solution can optionally deploy a server for Apache Solr search. This Solr
 deployment, however, is a development server and not recommended for production use. It
 is therefore suggested that you provide a URL to your production Apache Solr search server
-or cluster when deploying this Quick Start.
+or cluster when deploying this Partner Solution.
